@@ -24,14 +24,17 @@ def ngram(word, divide):
 		#freq[file[20:-4]] = text.count(word)
 		freq[year] = text.count(word)
 		if year not in size:
-			size[year] = 0
+			size[year] = len(text)
 		else:
 			size[year] += len(text)
 	min_year = min(freq.keys())
 	max_year = max(freq.keys())
-	for year in range(min_year, max_year):
+	print(freq, size)
+	for year in range(min_year, max_year+1):
 		if year not in freq:
 			freq[year] = 0
 		elif divide and size[year] != 0:
-			freq[year] /= size[year]
+			freq[year] = freq[year] * 1.0 / size[year] * 100
+	for year in freq:
+		freq[year] = "%.6f" % freq[year]
 	return freq

@@ -3,10 +3,17 @@ var chart_data = {};
 var x_min = 1960;
 var x_max = 1980;
 
+var generate_labels = function() {
+	let labels = [];
+	for (var i = x_min; i <= x_max; i++) {
+		if (i % 2 == 0) labels.push(i);	
+		else labels.push("");
+	}
+	return labels;
+}
+
 var init_chart = function() {
-	var default_years = [];
-	for (var i = 1960; i <= 1980; i += 2) default_years.push(i);
-	chart_data.labels = default_years;
+	chart_data.labels = generate_labels();
 	chart_data.datasets = [];
 
 	var ctx = $("#chart");
@@ -19,7 +26,7 @@ var init_chart = function() {
 		    	yAxes: [{
 		    		ticks: {
 		    			suggestedMin: 0,
-		    			suggestedMax: 10
+		    			suggestedMax: 0.001
 		    		}
 		    	}]
 		    }
@@ -31,8 +38,12 @@ var add_dataset = function(label, data) {
 	years = Object.keys(data);
 	var freqs = Object.values(data);
 
-	// TODO: Check if x_min and x_max need to be updated.
+	for (var i = 0; i < years.length; i++) {
+		x_max = Math.max(x_max, years[i]);
+		x_min = Math.min(x_min, years[i]);
+	}
 
+	chart_data.labels = generate_labels();
 	chart_data.datasets.push({
 		label: label,
 		data: freqs,
@@ -43,12 +54,19 @@ var add_dataset = function(label, data) {
 }
 
 var remove_dataset = function(label) {
-	for (var i = 0; i < data.length; i++) {
-		if (data[i].label === label) {
-			unuse_color(data[i].color);
-			delete data[i];
+	for (var i = 0; i < chart_data.length; i++) {
+		if (chart_data[i].label === label) {
+			unuse_color(chart_data[i].color);
+			delete chart_data[i];
 		}
 	}
+}
+
+var has_dataset = function(label) {
+	for (var i = 0; i < chart_data.datasets.length; i++) {
+		if (chart_data.datasets[i].label === label) return true;
+	}
+	return false;
 }
 
 var success_callback = function(data) {
@@ -56,9 +74,14 @@ var success_callback = function(data) {
 }
 
 $('#make-ngram').click(function() {
+	let word = $('#ngram').val();
+	// Don't add the same word twice.
+	if (has_dataset(word)) {
+		return;
+	}
 	var divide = $("#divide").is(":checked");
 	$.ajax({
-		url: 'http://localhost:5000/api/ngram/' + $('#ngram').val() + "/" + divide,
+		url: 'http://localhost:5000/api/ngram/' + word + "/true",
 		dataType: 'json',
 		success: success_callback
 	});
