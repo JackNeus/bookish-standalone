@@ -51,15 +51,19 @@ var add_dataset = function(label, data) {
 	});
 	// Render new datasets.
 	ngram_chart.update();
+	add_to_list(label);
 }
 
 var remove_dataset = function(label) {
-	for (var i = 0; i < chart_data.length; i++) {
-		if (chart_data[i].label === label) {
-			unuse_color(chart_data[i].color);
-			delete chart_data[i];
+	for (var i = 0; i < chart_data.datasets.length; i++) {
+		if (chart_data.datasets[i].label === label) {
+			unuse_color(chart_data.datasets[i].color);
+			chart_data.datasets.splice(i, 1);
 		}
 	}
+	$(".list-group-item#" + label).remove();
+	// Render chart without dataset.
+	ngram_chart.update();
 }
 
 var has_dataset = function(label) {
@@ -68,6 +72,31 @@ var has_dataset = function(label) {
 	}
 	return false;
 }
+
+var add_to_list = function(label) {
+	$("#ngrams-list").show();
+	var list_item = $('<li></li>')
+	.attr({
+		class: 'list-group-item',
+		id: label
+
+	})
+	let flex_container = $('<div></div>').attr({
+		class: 'd-flex align-items-center'
+	});
+	flex_container.append($('<span class="col-md-11">'+label+'</span>'));
+	let deleteButton = $('<i class="delete-ngram fa fa-minus"></i>');
+	flex_container.append(deleteButton);
+	list_item.append(flex_container);
+
+	$("#ngrams-list").append(list_item);
+	
+	$(".delete-ngram").click(function() {
+		remove_dataset($(this).parent().parent().attr("id"));
+	});
+}
+
+
 
 var success_callback = function(data) {
 	add_dataset($("#ngram").val(), data);
