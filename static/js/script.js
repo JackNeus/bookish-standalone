@@ -110,7 +110,7 @@ $('#make-ngram').click(function() {
 	}
 	var divide = $("#divide").is(":checked");
 	$.ajax({
-		url: 'http://localhost:5000/api/ngram/' + word + "/true",
+		url: '/api/ngram/' + word + "/true",
 		dataType: 'json',
 		success: success_callback
 	});
