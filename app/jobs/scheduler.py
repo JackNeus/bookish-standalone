@@ -19,8 +19,8 @@ def schedule_job(task_name, params, name = None, desription = None):
 	job = app.task_queue.enqueue(task_name, *params)
 	job_id = job.get_id()
 	job.meta['progress'] = 0.0
-    job.meta['status'] = 'Queued'
-    job.save_meta()
+	job.meta['status'] = 'Queued'
+	job.save_meta()
 
 	job_entry = JobEntry(id = job_id, name = name, desription = desription)
 	job_entry.save()
