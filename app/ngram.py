@@ -3,6 +3,7 @@ import os, glob
 import requests
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+from rq import get_current_job
 
 def multi_ngram():
 	os.chdir("txt/CRS_carcinogens")
