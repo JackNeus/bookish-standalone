@@ -5,6 +5,9 @@ def create_app(config_class=Config):
 	app = Flask(__name__)
 	app.config.from_object(config_class)
 
+	app.redis = Redis.from_url(app.config['REDIS_URL'])
+	app.task_queue = rq.Queue('bookish-tasks', connection = app.redis)
+
 	from app.jobs import bp as jobs_bp
 	app.register_blueprint(jobs_bp, url_prefix='')
 

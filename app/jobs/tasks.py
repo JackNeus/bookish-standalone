@@ -4,6 +4,12 @@ import math
 import requests
 from rq import get_current_job
 
+def _set_task_progess(progress):
+    job = get_current_job()
+    if job:
+        job.meta['progress'] = progress
+        job.save_meta()
+
 # Get full results for a UCSF IDL API request.
 # Does this by concatenating all 100-item pages.
 # Returns list of document IDs matching the query.
@@ -11,9 +17,10 @@ from rq import get_current_job
 def ucsf_api_aggregate(query):
     # RQ setup.
     job = get_current_job()
-    if job is not None: 
+    if job: 
         print("Job exists (%s)" % job.get_id())
-        job.meta['progress'] = 0.0
+        job.meta['status'] = 'Running'
+        job.save_meta()
     else:
         print("Job DNE.")
     print(query)
@@ -46,9 +53,11 @@ def ucsf_api_aggregate(query):
         print("Done page %d." % page)
 
         # Update RQ progress, if job is being run as an RQ task.
-        if job is not None:
-            job.meta['progress'] = 100.0 * (page + 1) / num_pages
-            job.save_meta()
+        _set_task_progess(100.0 * (page + 1) / num_pages)
+
+    if job:
+        job.meta['status'] = 'Done'
+        job.save_meta()
 
     print("Returning. Job should not run again.")
     return doc_ids
