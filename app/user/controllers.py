@@ -1,3 +1,5 @@
+from datetime import timedelta
+from flask import current_app
 from flask_login import LoginManager, login_user, logout_user, current_user
 from app import login_manager
 from app.models import User, UserEntry
@@ -27,14 +29,17 @@ def load_user(user_id):
 # views calls this in views.login()
 def login(username, password):
 	# Create the user
-	user = get_user_entry({'id': user_id})
+	user = get_user_entry({'username': username})
+
 	if user is None or not user.check_password(password):
 		raise UserDoesNotExistError
 	uid = user.id
 	user = load_user(uid)
 	if user:
 		# User should stay logged in for one week.
-		login_user(user, remember = True, duration = timedelta(days=CONFIG["SESSION_LENGTH"]))
+		login_user(user, 
+			remember = True, 
+			duration = timedelta(days=current_app.config["SESSION_LENGTH"]))
 	else:
 		raise UserDoesNotExistError
 

@@ -10,10 +10,10 @@ def login():
 
 	form = LoginForm()
 	if form.validate_on_submit():
-		try:
-			controller.login_user(form.username.data, form.password.data)
-		except:
-			return redirect(url_for('user.login'))
+		#try:
+		controller.login(form.username.data, form.password.data)
+		#except:
+		#	return redirect(url_for('user.login'))
 	return render_template("login.html", form=form)
 
 @bp.route('/logout')

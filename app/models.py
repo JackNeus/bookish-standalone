@@ -1,15 +1,20 @@
 import redis
 import rq
+from datetime import datetime
+from flask import current_app
 from flask_login import UserMixin
 from mongoengine import *
 from werkzeug.security import generate_password_hash, check_password_hash
 
 class JobEntry(Document):
     id = StringField(required = True, primary_key = True) 
+    task = StringField(required = True)
     name = StringField(required = True)
     description = StringField(max_length = 128)
-    user_id = IntField(required = False)
+    user_id = StringField(required = True)
     complete = BooleanField(required = True, default = False)
+    time_started = DateTimeField(required = True, default = datetime.now())
+    time_finished = DateTimeField()
 
     def get_rq_job(self):
         try:
@@ -17,6 +22,13 @@ class JobEntry(Document):
         except (redis.exceptions.RedisError, rq.exceptions.NoSuchJobError):
             return None
         return rq_job
+
+    def get_status(self):
+        job = self.get_rq_job()
+        if job and job.is_failed:
+            job.meta['status'] = 'Failed'
+            job.save_meta()
+        return job.meta.get('status') if job is not None else "Error"
 
     def get_progress(self):
         job = self.get_rq_job()
