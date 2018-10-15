@@ -22,6 +22,7 @@
 					<td>{{ jobs[i].time_started }}</td>
 					<td></td>
 					<td>{{ jobs[i].get_progress() }}</td>
+					<td>{{ jobs[i].description if jobs[i].description else "" }}</td>
 				</tr>
 			{% endfor %}
 		</tbody>

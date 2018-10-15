@@ -10,5 +10,5 @@ def jobs_index():
 @bp.route('/schedule')
 def schedule():
 	print(str(tasks.ucsf_api_aggregate))
-	scheduler.schedule_job(tasks.ucsf_api_aggregate, ['industry:drug'], 'test1')
+	scheduler.schedule_job(tasks.ucsf_api_aggregate, ['author:glantz'], 'test1')
 	return redirect(url_for('jobs.jobs_index'))

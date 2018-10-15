@@ -7,6 +7,7 @@ from app.models import JobEntry
 from flask import current_app
 from flask_login import current_user
 
+# Need to run command `rq worker bookish-tasks`
 def schedule_job(task, params, name = None, description = None):
 	job = current_app.task_queue.enqueue(task, *params)
 	job_id = job.get_id()
