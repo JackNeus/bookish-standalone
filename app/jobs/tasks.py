@@ -5,10 +5,18 @@ import requests
 from rq import get_current_job
 from flask import current_app
 
+from app.models import JobEntry
+
+def _get_job_entry(id):
+    job = JobEntry.objects(id = id)
+    if len(job) != 1:
+        return None
+    return job[0]
+
 def _set_task_progess(progress):
     job = get_current_job()
     if job:
-        job.meta['progress'] = progress
+        job.meta['progress'] = round(progress, 2)
         job.save_meta()
 
 def _set_task_status(status):
@@ -16,6 +24,9 @@ def _set_task_status(status):
     if job:
         job.meta['status'] = status
         job.save_meta()
+        #job_entry = _get_job_entry(job.get_id())
+        #job_entry.status = status
+        #job.save()
 
 def _write_task_results(data):
     job = get_current_job()
@@ -27,11 +38,23 @@ def _write_task_results(data):
     # TODO: Put this in config file without using current_app
     path = 'rq_results/'
     f = open(path + filename, "w")
-    # Write list
+
     if type(data) == type([]):
         for row in data:
             f.write(str(row) + '\n')
+    else:
+        with str(data) as out:
+            f.write(out)
     f.close()
+
+def _return_from_task(return_value):
+    _write_task_results(return_value)
+    _set_task_status('Done')
+
+def resolve_task(task_name):
+    if task_name == "ucsf_api_aggregate":
+        return ucsf_api_aggregate
+    return None
 
 # Get full results for a UCSF IDL API request.
 # Does this by concatenating all 100-item pages.
@@ -78,7 +101,4 @@ def ucsf_api_aggregate(query):
         # Update RQ progress, if job is being run as an RQ task.
         _set_task_progess(100.0 * (page + 1) / num_pages)
 
-    _write_task_results(doc_ids)
-    _set_task_status('Done')
-
-    return doc_ids
+    _return_from_task(doc_ids)

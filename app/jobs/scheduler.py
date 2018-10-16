@@ -18,6 +18,7 @@ def schedule_job(task, params, name = None, description = None):
 	job_entry = JobEntry(id = job_id, 
 						 task = task.__name__,
 						 name = name, 
+						 status = 'Queued',
 						 user_id = current_user.get_id(),
 						 description = description)
 	job_entry.save()
