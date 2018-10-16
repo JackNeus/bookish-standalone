@@ -1,8 +1,13 @@
-from flask import Flask
 from redis import Redis
 import rq
 from mongoengine import register_connection
+from flask import Flask
+from flask_bootstrap import Bootstrap
+from flask_login import LoginManager
 from config import Config
+
+login_manager = LoginManager()
+bootstrap = Bootstrap()
 
 def create_app(config_class=Config):
 	app = Flask(__name__)
@@ -22,6 +27,9 @@ def create_app(config_class=Config):
 		print("Database could not be configured.")
 		return None
 		
+	login_manager.init_app(app)
+	bootstrap.init_app(app)
+
 	app.redis = Redis.from_url(app.config['REDIS_URL'])
 	app.task_queue = rq.Queue('bookish-tasks', connection = app.redis)
 
@@ -30,6 +38,9 @@ def create_app(config_class=Config):
 
 	from app.web import bp as web_bp
 	app.register_blueprint(web_bp, url_prefix='')
+
+	from app.user import bp as user_bp
+	app.register_blueprint(user_bp, url_prefix='')
 
 	return app
 
