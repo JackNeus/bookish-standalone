@@ -2,7 +2,10 @@
 
 import math
 import requests
+import subprocess
 from rq import get_current_job
+
+from app.jobs.util import start_job
 
 def _set_task_progess(progress):
     job = get_current_job()
@@ -61,3 +64,13 @@ def ucsf_api_aggregate(query):
 
     print("Returning. Job should not run again.")
     return doc_ids
+
+# This job will probably never be client-facing, as it only needs to be run once.
+def clean(files):
+    def body(input_queue):
+        while not input_queue.empty():
+            filename = input_queue.get()
+            # TODO: Fix file paths
+            subprocess.check_output(['./clean.sh', filename])
+
+    start_job(job_body, files, num_threads = 1)
