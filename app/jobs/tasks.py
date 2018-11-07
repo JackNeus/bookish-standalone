@@ -8,53 +8,7 @@ from rq import get_current_job
 from flask import current_app
 
 from app.models import JobEntry
-
-def _get_job_entry(id):
-    job = JobEntry.objects(id = id)
-    if len(job) != 1:
-        return None
-    return job[0]
-
-#from app.jobs import util
-import util
-
-def _set_task_progess(progress):
-    job = get_current_job()
-    if job:
-        job.meta['progress'] = round(progress, 2)
-        job.save_meta()
-
-def _set_task_status(status):
-    job = get_current_job()
-    if job:
-        job.meta['status'] = status
-        job.save_meta()
-        #job_entry = _get_job_entry(job.get_id())
-        #job_entry.status = status
-        #job.save()
-
-def _write_task_results(data):
-    job = get_current_job()
-    if job is None:
-        # TODO: Raise exception
-        return
-    else:
-        filename = job.get_id()
-    # TODO: Put this in config file without using current_app
-    path = 'rq_results/'
-    f = open(path + filename, "w")
-
-    if type(data) == type([]):
-        for row in data:
-            f.write(str(row) + '\n')
-    else:
-        with str(data) as out:
-            f.write(out)
-    f.close()
-
-def _return_from_task(return_value):
-    _write_task_results(return_value)
-    _set_task_status('Done')
+from app.jobs.util import *
 
 def resolve_task(task_name):
     if task_name == "ucsf_api_aggregate":
@@ -70,7 +24,7 @@ def ucsf_api_aggregate(query):
     job = get_current_job()
     if job: 
         print("Job exists (%s)" % job.get_id())
-        _set_task_status('Running')
+        set_task_status('Running')
     else:
         print("Job DNE.")
     print(query)
@@ -104,9 +58,9 @@ def ucsf_api_aggregate(query):
         print("Done page %d." % page)
 
         # Update RQ progress, if job is being run as an RQ task.
-        _set_task_progess(100.0 * (page + 1) / num_pages)
+        set_task_progess(100.0 * (page + 1) / num_pages)
 
-    _return_from_task(doc_ids)
+    return_from_task(doc_ids)
 
     if job:
         job.meta['status'] = 'Done'

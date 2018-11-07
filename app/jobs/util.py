@@ -1,5 +1,50 @@
 import threading
+from rq import get_current_job
 from queue import Queue
+
+def get_job_entry(id):
+    job = JobEntry.objects(id = id)
+    if len(job) != 1:
+        return None
+    return job[0]
+
+def set_task_progess(progress):
+    job = get_current_job()
+    if job:
+        job.meta['progress'] = round(progress, 2)
+        job.save_meta()
+
+def set_task_status(status):
+    job = get_current_job()
+    if job:
+        job.meta['status'] = status
+        job.save_meta()
+        #job_entry = _get_job_entry(job.get_id())
+        #job_entry.status = status
+        #job.save()
+
+def write_task_results(data):
+    job = get_current_job()
+    if job is None:
+        # TODO: Raise exception
+        return
+    else:
+        filename = job.get_id()
+    # TODO: Put this in config file without using current_app
+    path = 'rq_results/'
+    f = open(path + filename, "w")
+
+    if type(data) == type([]):
+        for row in data:
+            f.write(str(row) + '\n')
+    else:
+        with str(data) as out:
+            f.write(out)
+    f.close()
+
+def return_from_task(return_value):
+    write_task_results(return_value)
+    set_task_status('Done')
 
 class InvalidArgumentError(Exception):
 	pass
