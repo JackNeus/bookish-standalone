@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block app_content %}
+	<a class="btn btn-primary" href="/schedule" role="button">Schedule Job</a>
+	<table class="table">
+		<thead>
+			<th scope="col">#</th>
+			<th scope="col">Task</th>
+			<th scope="col">Job Name</th>
+			<th scope="col">Status</th>
+			<th scope="col">Started</th>
+			<th scope="col">Finished</th>
+			<th scope="col">Progress</th>
+			<th scope="col">Description</th>
+		</thead>
+		<tbody>
+			{% for i in range(jobs|length) %}
+				<tr>
+					<th scope="row">{{ i }}</th>
+					<td>{{ jobs[i].task }}</td>
+					<td>{{ jobs[i].name }}</td>
+					<td>{{ jobs[i].get_status() }}</td>
+					<td>{{ jobs[i].time_started }}</td>
+					<td></td>
+					<td>{{ jobs[i].get_progress() }}</td>
+					<td>{{ jobs[i].description if jobs[i].description else "" }}</td>
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+{% endblock %}

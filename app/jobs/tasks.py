@@ -5,6 +5,15 @@ import os
 import requests
 import subprocess
 from rq import get_current_job
+from flask import current_app
+
+from app.models import JobEntry
+
+def _get_job_entry(id):
+    job = JobEntry.objects(id = id)
+    if len(job) != 1:
+        return None
+    return job[0]
 
 #from app.jobs import util
 import util
@@ -12,8 +21,45 @@ import util
 def _set_task_progess(progress):
     job = get_current_job()
     if job:
-        job.meta['progress'] = progress
+        job.meta['progress'] = round(progress, 2)
         job.save_meta()
+
+def _set_task_status(status):
+    job = get_current_job()
+    if job:
+        job.meta['status'] = status
+        job.save_meta()
+        #job_entry = _get_job_entry(job.get_id())
+        #job_entry.status = status
+        #job.save()
+
+def _write_task_results(data):
+    job = get_current_job()
+    if job is None:
+        # TODO: Raise exception
+        return
+    else:
+        filename = job.get_id()
+    # TODO: Put this in config file without using current_app
+    path = 'rq_results/'
+    f = open(path + filename, "w")
+
+    if type(data) == type([]):
+        for row in data:
+            f.write(str(row) + '\n')
+    else:
+        with str(data) as out:
+            f.write(out)
+    f.close()
+
+def _return_from_task(return_value):
+    _write_task_results(return_value)
+    _set_task_status('Done')
+
+def resolve_task(task_name):
+    if task_name == "ucsf_api_aggregate":
+        return ucsf_api_aggregate
+    return None
 
 # Get full results for a UCSF IDL API request.
 # Does this by concatenating all 100-item pages.
@@ -24,11 +70,11 @@ def ucsf_api_aggregate(query):
     job = get_current_job()
     if job: 
         print("Job exists (%s)" % job.get_id())
-        job.meta['status'] = 'Running'
-        job.save_meta()
+        _set_task_status('Running')
     else:
         print("Job DNE.")
     print(query)
+
     # CONSTANTS:
     # Base URL of API.
     base_url = "http://solr.industrydocumentslibrary.ucsf.edu/solr/ltdl3/query"
@@ -38,7 +84,7 @@ def ucsf_api_aggregate(query):
     # Initial API parameters.
     parameters = {"q": query,
                   "wt": "json"}
-
+                  
     # Make initial request to get total number of results.
     r = requests.get(url = base_url, params = parameters)
     r = r.json()
@@ -60,6 +106,8 @@ def ucsf_api_aggregate(query):
         # Update RQ progress, if job is being run as an RQ task.
         _set_task_progess(100.0 * (page + 1) / num_pages)
 
+    _return_from_task(doc_ids)
+
     if job:
         job.meta['status'] = 'Done'
         job.save_meta()
@@ -77,6 +125,7 @@ def clean(files):
             input_queue.task_done()
     util.start_job(job_body, files, num_threads = 3)
 
+'''
 # Temporary. Comment this out before running the actual app.
 txt = []
 for subdir, dirs, files in os.walk("../txt/ucsf/"):
@@ -85,3 +134,4 @@ for subdir, dirs, files in os.walk("../txt/ucsf/"):
 
 clean(txt + txt)
 print("Done.")
+'''

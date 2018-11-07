@@ -5,3 +5,4 @@ rq_results/*
 __pycache__/*
 *.pyc
 .env
+rq_results/

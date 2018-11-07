@@ -2,27 +2,25 @@ import time
 
 from redis import Redis
 import rq
-
+from app.jobs import tasks
 from app.models import JobEntry
+from flask import current_app
+from flask_login import current_user
 
-def experiment():
-	# start queue with rq worker bookish-rq
-	queue = rq.Queue('bookish-rq', connection=Redis.from_url('redis://'))
-	job = queue.enqueue('jobs.ucsf_api_aggregate', 'industry:drug')
-	print(job.get_id())
-	while not job.is_finished:
-		time.sleep(5)
-		job.refresh()
-		print(job.meta)
-
-def schedule_job(task_name, params, name = None, desription = None):
-	job = app.task_queue.enqueue(task_name, *params)
+# Need to first start script start_worker.py.
+def schedule_job(task, params, name = None, description = None):
+	job = current_app.task_queue.enqueue(task, *params)
 	job_id = job.get_id()
 	job.meta['progress'] = 0.0
 	job.meta['status'] = 'Queued'
 	job.save_meta()
 
-	job_entry = JobEntry(id = job_id, name = name, desription = desription)
+	job_entry = JobEntry(id = job_id, 
+						 task = task.__name__,
+						 name = name, 
+						 status = 'Queued',
+						 user_id = current_user.get_id(),
+						 description = description)
 	job_entry.save()
 
 def get_job(id):
@@ -30,3 +28,6 @@ def get_job(id):
 	if len(jobs) != 1:
 		return None
 	job = job[0]
+
+def get_user_jobs(user_id):
+	return JobEntry.objects(user_id = user_id)
