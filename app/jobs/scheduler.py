@@ -7,7 +7,7 @@ from app.models import JobEntry
 from flask import current_app
 from flask_login import current_user
 
-# Need to first start script run_worker.py.
+# Need to first start script start_worker.py.
 def schedule_job(task, params, name = None, description = None):
 	job = current_app.task_queue.enqueue(task, *params)
 	job_id = job.get_id()

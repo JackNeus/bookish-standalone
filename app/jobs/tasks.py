@@ -79,7 +79,7 @@ def ucsf_api_aggregate(query):
     # Initial API parameters.
     parameters = {"q": query,
                   "wt": "json"}
-
+                  
     # Make initial request to get total number of results.
     r = requests.get(url = base_url, params = parameters)
     r = r.json()

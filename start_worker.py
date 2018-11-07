@@ -3,6 +3,7 @@
 import sys
 from mongoengine import register_connection
 from rq import Connection, Worker
+from worker import BookishWorker
 
 from config import Config
 config = vars(Config)
@@ -25,5 +26,5 @@ except:
 with Connection():
     qs = sys.argv[1:] or [config['REDIS_QUEUE_NAME']]
 
-    w = Worker(qs)
+    w = BookishWorker(qs)
     w.work()
