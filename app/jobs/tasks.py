@@ -1,7 +1,9 @@
 # This file will contain all possible background jobs that the user can run.
 
 import math
+import os
 import requests
+import subprocess
 from rq import get_current_job
 from flask import current_app
 
@@ -12,6 +14,9 @@ def _get_job_entry(id):
     if len(job) != 1:
         return None
     return job[0]
+
+#from app.jobs import util
+import util
 
 def _set_task_progess(progress):
     job = get_current_job()
@@ -102,3 +107,31 @@ def ucsf_api_aggregate(query):
         _set_task_progess(100.0 * (page + 1) / num_pages)
 
     _return_from_task(doc_ids)
+
+    if job:
+        job.meta['status'] = 'Done'
+        job.save_meta()
+
+    print("Returning. Job should not run again.")
+    return doc_ids
+
+# This job will probably never be client-facing, as it only needs to be run once.
+def clean(files):
+    def job_body(input_queue):
+        print("Entered.")
+        while not input_queue.empty():
+            file_path = input_queue.get()
+            subprocess.check_output(['./jobs/clean.sh', file_path])
+            input_queue.task_done()
+    util.start_job(job_body, files, num_threads = 3)
+
+'''
+# Temporary. Comment this out before running the actual app.
+txt = []
+for subdir, dirs, files in os.walk("../txt/ucsf/"):
+    for file in files:
+        txt.append(subdir + "/" + file)
+
+clean(txt + txt)
+print("Done.")
+'''
