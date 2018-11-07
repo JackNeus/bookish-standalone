@@ -33,23 +33,18 @@ class JobEntry(Document):
         job = self.get_rq_job()
         return job.meta.get('progress', 0) if job is not None else 100
 
-    # Update status field based on the value of the RQ job's 
-    # status field.
     def update_status(self):
-        job = self.get_rq_job()
-        
-        if job:
-            if job.is_failed:
-                self.status = "Failed"
-            else:
-                self.status = job.meta["status"]
-        # If the RQ job is no longer running 
-        if not job and self.status != "Done":
-            self.status = 'Failed' 
+        # If in the app, do the following:
+        print(current_app)
+        if current_app:
+            # If the job is Queued or Running but doesn't exist in RQ,
+            # something went wrong.
+            if self.status in ["Queued", "Running"] and not self.get_rq_job():
+                self.status = "Internal Error"
 
     def clean(self):
         self.update_status()
-
+        
 class User(UserMixin):
     def __init__(self, uid, username):
         self.uid = str(uid)

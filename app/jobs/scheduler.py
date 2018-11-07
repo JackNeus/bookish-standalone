@@ -1,18 +1,19 @@
+import rq
 import time
 
-from redis import Redis
-import rq
-from app.jobs import tasks
-from app.models import JobEntry
 from flask import current_app
 from flask_login import current_user
+from redis import Redis
+
+from app.models import JobEntry
+from tasks import tasks
 
 # Need to first start script start_worker.py.
 def schedule_job(task, params, name = None, description = None):
-	job = current_app.task_queue.enqueue(task, *params)
+	# Temporarily made TTL 0 to test DB logging.
+	job = current_app.task_queue.enqueue(task, *params, result_ttl = 0)
 	job_id = job.get_id()
 	job.meta['progress'] = 0.0
-	job.meta['status'] = 'Queued'
 	job.save_meta()
 
 	job_entry = JobEntry(id = job_id, 

@@ -7,8 +7,7 @@ import subprocess
 from rq import get_current_job
 from flask import current_app
 
-from app.models import JobEntry
-from app.jobs.util import *
+from tasks.util import *
 
 def resolve_task(task_name):
     if task_name == "ucsf_api_aggregate":
@@ -28,7 +27,7 @@ def ucsf_api_aggregate(query):
     else:
         print("Job DNE.")
     print(query)
-
+    #raise Exception
     # CONSTANTS:
     # Base URL of API.
     base_url = "http://solr.industrydocumentslibrary.ucsf.edu/solr/ltdl3/query"
@@ -38,7 +37,7 @@ def ucsf_api_aggregate(query):
     # Initial API parameters.
     parameters = {"q": query,
                   "wt": "json"}
-                  
+            
     # Make initial request to get total number of results.
     r = requests.get(url = base_url, params = parameters)
     r = r.json()

@@ -3,7 +3,6 @@
 import sys
 from mongoengine import register_connection
 from rq import Connection, Worker
-from worker import BookishWorker
 
 from config import Config
 config = vars(Config)
@@ -21,10 +20,12 @@ try:
 except:
 	exit("Database could not be configured.")
 
+from tasks.worker import BookishWorker
+
 # Provide queue names to listen to as arguments to this script,
 # similar to rq worker
 with Connection():
     qs = sys.argv[1:] or [config['REDIS_QUEUE_NAME']]
-
+    print("Starting BookishWorker...")
     w = BookishWorker(qs)
     w.work()

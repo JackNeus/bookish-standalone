@@ -2,6 +2,8 @@ import threading
 from rq import get_current_job
 from queue import Queue
 
+from app.models import JobEntry
+
 def get_job_entry(id):
     job = JobEntry.objects(id = id)
     if len(job) != 1:
@@ -14,14 +16,18 @@ def set_task_progess(progress):
         job.meta['progress'] = round(progress, 2)
         job.save_meta()
 
-def set_task_status(status):
-    job = get_current_job()
+def set_task_status(status, job = None):
+    if not job:
+        job = get_current_job()
     if job:
-        job.meta['status'] = status
-        job.save_meta()
-        #job_entry = _get_job_entry(job.get_id())
-        #job_entry.status = status
-        #job.save()
+        print("Setting status: %s" % status)
+        job_entry = get_job_entry(job.get_id())
+        print(job_entry, job_entry.status)
+        job_entry.status = status
+        job_entry.save()
+    else:
+        # TODO: Raise exception
+        pass
 
 def write_task_results(data):
     job = get_current_job()
@@ -44,7 +50,7 @@ def write_task_results(data):
 
 def return_from_task(return_value):
     write_task_results(return_value)
-    set_task_status('Done')
+    #set_task_status('Done')
 
 class InvalidArgumentError(Exception):
 	pass
