@@ -1,7 +1,7 @@
 import redis
 import rq
 from datetime import datetime
-from flask import current_app
+from flask import current_app, has_app_context
 from flask_login import UserMixin
 from mongoengine import *
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -18,7 +18,9 @@ class JobEntry(Document):
     time_finished = DateTimeField()
 
     def get_rq_job(self):
-        try:
+        if not has_app_context():
+            return None
+        try:   
             rq_job = rq.job.Job.fetch(self.id, connection=current_app.redis)
         except (redis.exceptions.RedisError, rq.exceptions.NoSuchJobError):
             return None
@@ -35,11 +37,13 @@ class JobEntry(Document):
 
     def update_status(self):
         # If in the app, do the following:
-        print(current_app)
-        if current_app:
-            # If the job is Queued or Running but doesn't exist in RQ,
+        if has_app_context():
+            # If the job is Queued or Running but doesn't exist in RQ (or has failed),
             # something went wrong.
-            if self.status in ["Queued", "Running"] and not self.get_rq_job():
+            # TODO: This isn't perfect (if you kill everything a job may still appear as "Running"),
+            # but it's better than nothing.
+            rq_job = self.get_rq_job()
+            if self.status in ["Queued", "Running"] and (rq_job is None or rq_job.get_status() == "failed"):
                 self.status = "Internal Error"
 
     def clean(self):

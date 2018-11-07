@@ -22,7 +22,6 @@ def set_task_status(status, job = None):
     if job:
         print("Setting status: %s" % status)
         job_entry = get_job_entry(job.get_id())
-        print(job_entry, job_entry.status)
         job_entry.status = status
         job_entry.save()
     else:
