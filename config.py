@@ -8,6 +8,7 @@ class Config(object):
 	SECRET_KEY = os.environ.get('SECRET_KEY')
 	DEBUG = True
 	TEMPLATES_AUTO_RELOAD = True
+	REDIS_QUEUE_NAME = 'bookish-tasks'
 	REDIS_URL = os.environ.get('REDIS_URL') or 'redis://'
 	TASK_RESULT_PATH = 'rq_results/'
 

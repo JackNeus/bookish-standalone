@@ -1,9 +1,11 @@
 from flask import current_app, flash, redirect, render_template, url_for
+from flask_security import login_required
 from flask_login import current_user
 from app.jobs import bp, scheduler, tasks
 from app.jobs.forms import ScheduleForm
 
 @bp.route('/jobs')
+@login_required
 def jobs_index():
 	return render_template("jobs/jobs.html", jobs=scheduler.get_user_jobs(current_user.get_id()))
 
