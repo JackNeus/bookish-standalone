@@ -83,7 +83,7 @@ def clean(files):
     util.start_job(job_body, files, num_threads = 4)
     '''
     from multiprocessing import Pool
-    return Pool(4).map(analysis, files, chunksize = 1)
+    return Pool(2).map(analysis, files, chunksize = 1)
 # Temporary. Comment this out before running the actual app.
 txt = []
 for subdir, dirs, files in os.walk("../txt/ucsf/"):
