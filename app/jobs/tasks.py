@@ -1,11 +1,13 @@
 # This file will contain all possible background jobs that the user can run.
 
 import math
+import os
 import requests
 import subprocess
 from rq import get_current_job
 
-from app.jobs.util import start_job
+#from app.jobs import util
+import util
 
 def _set_task_progess(progress):
     job = get_current_job()
@@ -67,10 +69,19 @@ def ucsf_api_aggregate(query):
 
 # This job will probably never be client-facing, as it only needs to be run once.
 def clean(files):
-    def body(input_queue):
+    def job_body(input_queue):
+        print("Entered.")
         while not input_queue.empty():
-            filename = input_queue.get()
-            # TODO: Fix file paths
-            subprocess.check_output(['./clean.sh', filename])
+            file_path = input_queue.get()
+            subprocess.check_output(['./jobs/clean.sh', file_path])
+            input_queue.task_done()
+    util.start_job(job_body, files, num_threads = 3)
 
-    start_job(job_body, files, num_threads = 1)
+# Temporary. Comment this out before running the actual app.
+txt = []
+for subdir, dirs, files in os.walk("../txt/ucsf/"):
+    for file in files:
+        txt.append(subdir + "/" + file)
+
+clean(txt + txt)
+print("Done.")
