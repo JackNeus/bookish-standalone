@@ -31,7 +31,7 @@ def create_app(config_class=Config):
 	bootstrap.init_app(app)
 
 	app.redis = Redis.from_url(app.config['REDIS_URL'])
-	app.task_queue = rq.Queue('bookish-tasks', connection = app.redis)
+	app.task_queue = rq.Queue(app.config['REDIS_QUEUE_NAME'], connection = app.redis)
 
 	from app.jobs import bp as jobs_bp
 	app.register_blueprint(jobs_bp, url_prefix='')
