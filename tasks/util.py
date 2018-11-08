@@ -2,7 +2,7 @@ import threading
 from rq import get_current_job
 from queue import Queue
 
-from app.models import JobEntry
+#from app.models import JobEntry
 
 def get_job_entry(id):
     job = JobEntry.objects(id = id)

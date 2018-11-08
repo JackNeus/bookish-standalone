@@ -7,8 +7,8 @@ import subprocess
 from rq import get_current_job
 from flask import current_app
 
-from tasks.util import *
-
+#from tasks.util import *
+import util
 def resolve_task(task_name):
     if task_name == "ucsf_api_aggregate":
         return ucsf_api_aggregate
@@ -68,23 +68,28 @@ def ucsf_api_aggregate(query):
     print("Returning. Job should not run again.")
     return doc_ids
 
+def analysis(file_path):
+    subprocess.Popen(['./clean.sh', file_path])
+        
 # This job will probably never be client-facing, as it only needs to be run once.
 def clean(files):
+    '''
     def job_body(input_queue):
         print("Entered.")
         while not input_queue.empty():
             file_path = input_queue.get()
-            subprocess.check_output(['./jobs/clean.sh', file_path])
+            subprocess.Popen(['./clean.sh', file_path])
             input_queue.task_done()
-    util.start_job(job_body, files, num_threads = 3)
-
-'''
+    util.start_job(job_body, files, num_threads = 4)
+    '''
+    from multiprocessing import Pool
+    return Pool(4).map(analysis, files, chunksize = 1)
 # Temporary. Comment this out before running the actual app.
 txt = []
 for subdir, dirs, files in os.walk("../txt/ucsf/"):
     for file in files:
-        txt.append(subdir + "/" + file)
-
-clean(txt + txt)
+        if file[-4:] == ".ocr":
+            txt.append(subdir + "/" + file)
+print(len(txt))
+clean(txt + txt + txt)
 print("Done.")
-'''
