@@ -98,6 +98,8 @@ def word_freq_helper(files, keywords):
     to_process = len(files)
 
     word_freqs = multiprocessing.Pool(1).starmap(get_word_freq, zip(files, repeat(keywords)))
+    # Currrently, discard any files that couldn't be found.
+    word_freqs = filter(lambda x: x is not None, word_freqs)
 
     # Merge dictionaries.
     years = [x[1] for x in files]
@@ -119,7 +121,12 @@ def word_freq_helper(files, keywords):
 
 def get_word_freq(file_data, keywords):
     filename, fileyear = file_data
-    file = list(map(lambda x: x.strip(), open(filename, "r").readlines()))
+    # TODO: Determine behavior when a file can't be found.
+    try:
+        file = open(filename, "r")
+    except FileNotFoundError as e:
+        return None
+    file = list(map(lambda x: x.strip(), file.readlines()))
     freqs = init_dict(keywords, 0)
     for word in file:
         word = word.lower()
