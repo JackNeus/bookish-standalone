@@ -1,13 +1,15 @@
 # This file will contain all possible background jobs that the user can run.
 
 import math
+import multiprocessing
 import os
 import requests
 import subprocess
+import queue
 from collections import defaultdict
+from itertools import repeat
 from rq import get_current_job
 from flask import current_app
-from multiprocessing import Pool, Queue
 
 from tasks.util import *
 
@@ -43,6 +45,7 @@ def ucsf_api_aggregate(query):
 
     # Calculate number of pages.
     num_pages = math.ceil(total_items * 1.0 / page_size)
+    set_task_size(num_pages)
     print("%d pages total." % num_pages)
 
     doc_ids = []
@@ -57,65 +60,73 @@ def ucsf_api_aggregate(query):
             if "documentdate" in doc_metadata:
                 document_year = " " + doc_metadata["documentdate"][:4]
             document_id = doc_metadata["id"]
-            document_location = "txt/ucsf/" + "/".join([c for c in document_id[:4]] + [document_id]) 
+            document_location = "txt/ucsf/" + "/".join([c for c in document_id[:4]] + [document_id, document_id]) + ".ocr"
             return document_location + document_year 
 
         doc_ids.extend(list(map(extract_data, r["response"]["docs"])))
         print("Done page %d." % page)
 
         # Update RQ progress, if job is being run as an RQ task.
-        set_task_progess(100.0 * (page + 1) / num_pages)
+        inc_task_progress()
 
     return_from_task(doc_ids)
 
 def word_freq(file_list_path, keywords):
-    start_job()
-    file_list_file = open(app.config["TASK_RESULT_PATH"] + file_list_path)
-    file_list = map(lambda x: x.split(" "), file_list_file.readlines())
+    init_job()
+    # TODO: Replace rq_results with a config file.
+    # TODO: Make sure file_list_path is a valid task ID.
+    file_list_file = open('rq_results/' + file_list_path)
+    def extract(line):
+        line = line.split(" ")
+        line[0] += ".clean"
+        line[1] = int(line[1][:-1])
+        return tuple(line)
+
+    file_list = map(lambda line: extract(line), file_list_file.readlines())
     # Remove files without years.
-    file_list = dict(filter(lambda x: len(x) > 1, file_list))
-    return_from_task(_word_freq(file_list, keywords))
+    file_list = list(filter(lambda x: len(x) > 1, file_list))
 
-def _word_freq(files, keywords):
+    set_task_size(len(file_list))
+    print("Analyzing %d files" % len(file_list))
+    return_from_task(word_freq_helper(file_list, keywords))
+
+def word_freq_helper(files, keywords):
+    if isinstance(keywords, str):
+        keywords = [keywords]
+    # Remove duplicates and make all keywords lowercase.
+    keywords = [keyword.lower() for keyword in set(keywords)]
     to_process = len(files)
-    processed = 0
 
-    # Return the following tuple (year, word freq dict)
-    def _get_word_freq(file_data, keywords):
-        filename, fileyear = file_data
-        file = open(filename, "r").readlines()
-        freqs = init_dict(keywords, 0)
-        for word in file:
-            if word in keywords:
-                freq[word] += 1
-        processed += 1
-
-        # TODO: More sophisticated method of only updating at certain milestones?
-        if processed % 100 == 0:
-            set_task_progess(100.0 * processed / to_process)
-        return (fileyear, freqs, len(file))
-
-    # TODO: Replace constant with config variable
-    word_freqs = Pool(1).map(_get_word_freq, files)
+    word_freqs = multiprocessing.Pool(1).starmap(get_word_freq, zip(files, repeat(keywords)))
 
     # Merge dictionaries.
     years = [x[1] for x in files]
-    min_year = min(years)
-    max_year = max(years)
+    min_year = int(min(years))
+    max_year = int(max(years))
     years = range(min_year, max_year+1)
-
-    global_word_freqs = init_dict(years, {})
+    global_word_freqs = init_dict(years, init_dict(keywords, 0))
     corpus_size = init_dict(years, 0)
     for year, freqs, file_size in word_freqs:
-        global_word_freqs[year] += freqs
+        for word, frequency in freqs.items():
+            global_word_freqs[year][word] += frequency
         corpus_size[year] += file_size
-
     # Convert absolute count to percentage
-    for year in global_word_freqs:
-        if corpus_size[year] != 0:
-            global_word_freqs[year] = {k: v / corpus_size[year] * 100 for k, v in global_word_freqs[year]}
+    #for year in global_word_freqs:
+    #    if corpus_size[year] != 0:
+    #        global_word_freqs[year] = {k: v / corpus_size[year] * 100 for k, v in global_word_freqs[year].items()}
 
     return global_word_freqs
+
+def get_word_freq(file_data, keywords):
+    filename, fileyear = file_data
+    file = list(map(lambda x: x.strip(), open(filename, "r").readlines()))
+    freqs = init_dict(keywords, 0)
+    for word in file:
+        word = word.lower()
+        if word in keywords:
+            freqs[word] += 1
+    inc_task_processed()
+    return (fileyear, freqs, len(file))
 
 # This job will probably never be client-facing, as it only needs to be run once.
 def clean(files):
@@ -125,7 +136,7 @@ def clean(files):
             file_path = input_queue.get()
             subprocess.check_output(['./jobs/clean.sh', file_path])
             input_queue.task_done()
-    util.start_job(job_body, files, num_threads = 3)
+    util.multi_work(job_body, files, num_threads = 3)
 
 '''
 # Temporary. Comment this out before running the actual app.

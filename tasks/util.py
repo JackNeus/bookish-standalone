@@ -1,3 +1,5 @@
+import copy
+import json
 import threading
 from rq import get_current_job
 from queue import Queue
@@ -7,7 +9,7 @@ from app.models import JobEntry
 def init_dict(keys, default_value):
     new_dict = {}
     for k in keys:
-        new_dict[k] = default_value
+        new_dict[k] = copy.deepcopy(default_value)
     return new_dict
 
 def init_job():
@@ -16,6 +18,9 @@ def init_job():
     if job: 
         print("Job exists (%s)" % job.get_id())
         set_task_status('Running')
+
+        job.meta['processed'] = 0
+        job.save_meta()
     else:
         print("Job DNE.")
 
@@ -25,10 +30,16 @@ def get_job_entry(id):
         return None
     return job[0]
 
-def set_task_progess(progress):
+def inc_task_processed(amt = 1):
     job = get_current_job()
     if job:
-        job.meta['progress'] = round(progress, 2)
+        job.meta['processed'] += amt
+        job.save_meta()
+
+def set_task_size(size):
+    job = get_current_job()
+    if job:
+        job.meta['size'] = size
         job.save_meta()
 
 def set_task_status(status, job = None):
@@ -36,6 +47,7 @@ def set_task_status(status, job = None):
         job = get_current_job()
     if job:
         print("Setting status: %s" % status)
+        print(job.get_id())
         job_entry = get_job_entry(job.get_id())
         job_entry.status = status
         job_entry.save()
@@ -54,12 +66,13 @@ def write_task_results(data):
     path = 'rq_results/'
     f = open(path + filename, "w")
 
-    if type(data) == type([]):
+    if isinstance(data, list):
         for row in data:
             f.write(str(row) + '\n')
+    elif isinstance(data, dict):
+        f.write(json.dumps(data))
     else:
-        with str(data) as out:
-            f.write(out)
+        f.write(str(data))
     f.close()
 
 def return_from_task(return_value):
@@ -74,7 +87,7 @@ class InvalidArgumentError(Exception):
 # func_input: list of elements to be added to a queue
 # kwargs: parameters for process_func
 # num_threads: number of threads to be spawned
-def start_job(process_func, func_input, kwargs = {}, num_threads = 1):
+def multi_work(process_func, func_input, kwargs = {}, num_threads = 1):
 	if "input_queue" in kwargs:
 		raise InvalidArgumentError("\"input_queue\" is a reserved parameter name.")
 
@@ -86,4 +99,5 @@ def start_job(process_func, func_input, kwargs = {}, num_threads = 1):
 		t.daemon = True
 		t.start()
 	input_queue.join()
+    # TODO: join with exception 
 
