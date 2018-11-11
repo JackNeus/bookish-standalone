@@ -1,8 +1,10 @@
 from flask import current_app, flash, redirect, render_template, url_for
 from flask_security import login_required
 from flask_login import current_user
-from app.jobs import bp, scheduler, tasks
+
+from app.jobs import bp, scheduler
 from app.jobs.forms import ScheduleForm
+from tasks import tasks
 
 @bp.route('/jobs')
 @login_required
