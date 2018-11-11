@@ -4,6 +4,21 @@ from queue import Queue
 
 from app.models import JobEntry
 
+def init_dict(keys, default_value):
+    new_dict = {}
+    for k in keys:
+        new_dict[k] = default_value
+    return new_dict
+
+def init_job():
+    # RQ setup.
+    job = get_current_job()
+    if job: 
+        print("Job exists (%s)" % job.get_id())
+        set_task_status('Running')
+    else:
+        print("Job DNE.")
+
 def get_job_entry(id):
     job = JobEntry.objects(id = id)
     if len(job) != 1:
