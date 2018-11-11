@@ -67,7 +67,7 @@ def ucsf_api_aggregate(query):
         print("Done page %d." % page)
 
         # Update RQ progress, if job is being run as an RQ task.
-        inc_task_progress()
+        inc_task_processed()
 
     return_from_task(doc_ids)
 
