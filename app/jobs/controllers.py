@@ -25,7 +25,7 @@ def get_user_jobs(user_id):
 	return JobEntry.objects(user_id = user_id)
 
 # Need to first start script start_worker.py.
-def schedule_job(task, params, name = None, description = None):
+def schedule_job(task, params, name = None):
 	# Temporarily made TTL 0 to test DB logging.
 	job = current_app.task_queue.enqueue(task, *params, result_ttl = 0, ttl = -1)
 	job_id = job.get_id()
@@ -36,8 +36,7 @@ def schedule_job(task, params, name = None, description = None):
 						 task = task.__name__,
 						 name = name, 
 						 status = 'Queued',
-						 user_id = current_user.get_id(),
-						 description = description)
+						 user_id = current_user.get_id())
 	job_entry.save()
 
 

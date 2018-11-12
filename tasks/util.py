@@ -64,7 +64,6 @@ def set_task_status(status, job = None, job_id = None):
 
     if job_id:
         print("Setting status: %s" % status)
-        print(job_id)
         job_entry = get_job_entry(job_id)
         job_entry.status = status
         job_entry.save()
@@ -73,9 +72,7 @@ def set_task_status(status, job = None, job_id = None):
         pass
 
 def set_task_params(params):
-    print("Here", params)
     job = get_current_job()
-    print(job)
     job_entry = get_job_entry(job.get_id())
     job_entry.params = params
     job_entry.save()

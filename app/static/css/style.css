@@ -33,3 +33,7 @@ body {
 	font-family: monospace;
 	white-space: pre-wrap;
 }
+
+.container-fluid {
+	max-width: 90%;
+}
