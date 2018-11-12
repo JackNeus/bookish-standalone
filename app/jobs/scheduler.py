@@ -11,7 +11,7 @@ from tasks import tasks
 # Need to first start script start_worker.py.
 def schedule_job(task, params, name = None, description = None):
 	# Temporarily made TTL 0 to test DB logging.
-	job = current_app.task_queue.enqueue(task, *params, result_ttl = 0)
+	job = current_app.task_queue.enqueue(task, *params, result_ttl = 0, ttl = -1)
 	job_id = job.get_id()
 	job.meta['progress'] = 0.0
 	job.save_meta()

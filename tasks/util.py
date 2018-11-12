@@ -42,6 +42,15 @@ def set_task_size(size):
         job.meta['size'] = size
         job.save_meta()
 
+def get_task_status(job = None):
+    if not job:
+        job = get_current_job()
+    if job:
+        job = get_job_entry(job.get_id())
+        if not job:
+            return None
+        return job.status 
+
 def set_task_status(status, job = None):
     if not job:
         job = get_current_job()
@@ -52,6 +61,7 @@ def set_task_status(status, job = None):
         job_entry.status = status
         job_entry.save()
     else:
+        raise Exception
         # TODO: Raise exception
         pass
 

@@ -2,7 +2,7 @@ from flask import current_app, flash, redirect, render_template, url_for
 from flask_security import login_required
 from flask_login import current_user
 
-from app.jobs import bp, scheduler
+from app.jobs import bp, scheduler, controllers as controller
 from app.jobs.forms import ScheduleForm
 from tasks import tasks
 
@@ -35,3 +35,12 @@ def schedule():
 	#print(str(tasks.ucsf_api_aggregate))
 	#scheduler.schedule_job(tasks.ucsf_api_aggregate, ['author:glantz'], 'test1')
 	#return redirect(url_for('jobs.jobs_index'))
+
+@bp.route('jobs/kill/<id>')
+def kill(id):
+	job = controller.get_job_entry(id)
+	if job is None:
+		flash("Job does not exist.")
+	if not controller.kill_job(id):
+		flash("Failed to cancel job. Job may still be running.")
+	return redirect(url_for("jobs.jobs_index"))
