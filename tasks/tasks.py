@@ -83,7 +83,8 @@ def word_freq(file_list_path, keywords):
     def extract(line):
         line = line.split(" ")
         line[0] += ".clean"
-        line[1] = int(line[1][:-1])
+        if len(line) > 1:
+            line[1] = int(line[1][:-1])
         return tuple(line)
 
     file_list = map(lambda line: extract(line), file_list_file.readlines())

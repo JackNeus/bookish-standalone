@@ -1,10 +1,24 @@
 import copy
 import json
+from mongoengine import register_connection
 import threading
 from rq import get_current_job
 from queue import Queue
 
 from app.models import JobEntry
+
+from config import Config
+config = vars(Config)
+
+def init_db_connection():
+    register_connection (
+        alias = "default",
+        name = config["DB_NAME"],
+        username = config["DB_USER"],
+        password = config["DB_PASSWORD"],
+        host = config["DB_URL"],
+        port = config["DB_PORT"]
+    )
 
 def init_dict(keys, default_value):
     new_dict = {}
@@ -17,6 +31,7 @@ def init_job():
     job = get_current_job()
     if job: 
         print("Job exists (%s)" % job.get_id())
+        init_db_connection()
         set_task_status('Running')
 
         job.meta['processed'] = 0

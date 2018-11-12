@@ -10,23 +10,6 @@ import time
 from app.models import JobEntry
 from tasks.util import *
 
-def set_aborted_status(id):
-    from config import Config
-    config = vars(Config)
-
-    register_connection (
-        alias = "default",
-        name = config["DB_NAME"],
-        username = config["DB_USER"],
-        password = config["DB_PASSWORD"],
-        host = config["DB_URL"],
-        port = config["DB_PORT"]
-    )
-
-    job = JobEntry.objects(id = id)[0]
-    job.status = "Aborted"
-    job.save()
-
 # Kill code taken from rminderhoud at https://github.com/rq/rq/issues/684
 
 kill_key = "rq:jobs:kill"
@@ -40,10 +23,11 @@ class KillJob(Job):
 
     def _execute(self):
         def check_kill(conn, id, interval=5):
+            init_db_connection()
             while True:
                 res = conn.srem(kill_key, id)
                 if res > 0:
-                    set_aborted_status(id)
+                    set_task_status("Aborted")
                     os.kill(os.getpid(), signal.SIGKILL)
                 time.sleep(interval)
 

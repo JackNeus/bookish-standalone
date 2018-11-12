@@ -37,3 +37,10 @@ def get_job_results(id):
 		return data
 	except FileNotFoundError:
 		return "Results could not be found."
+
+def get_seed_jobs():
+	seed_tasks = ["ucsf_api_aggregate"]
+	jobs = JobEntry.objects(task__in = seed_tasks, status = "Completed")
+	jobs = list(map(lambda x: (x.id, "%s (%s)" % (x.name, x.task)), jobs))
+	print(jobs)
+	return jobs
