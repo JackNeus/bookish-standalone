@@ -8,7 +8,7 @@ from tasks import tasks
 
 @bp.route('/jobs')
 @login_required
-def jobs():
+def jobs_index():
 	return render_template("jobs/jobs.html", jobs=controller.get_user_jobs(current_user.get_id()))
 
 @bp.route('/schedule', methods=["GET", "POST"])

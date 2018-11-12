@@ -10,7 +10,7 @@ def navbar():
 	print(current_user)
 	if current_user.is_authenticated:
 		navbar_elements.extend([
-			View('My Jobs', 'jobs.jobs'),
+			View('My Jobs', 'jobs.jobs_index'),
 			View('Schedule Job', 'jobs.schedule'),
 			View('Logout', 'user.logout')
 		])

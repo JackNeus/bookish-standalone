@@ -5,7 +5,7 @@ from app.web import bp
 
 @bp.route('/')
 def index():
-	return redirect(url_for('jobs.jobs'))
+	return redirect(url_for('jobs.jobs_index'))
 	#return render_template("index.html")
 
 @bp.route('/api/ngram/<word>/<divide>')

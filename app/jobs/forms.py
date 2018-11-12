@@ -14,15 +14,15 @@ def NonNegative(form, field):
 
 task_list = [("ngram", "NGram"), ("ucsf_api_aggregate", "UCSF API Call")][::-1]
 class ScheduleForm(FlaskForm):
-	job_name = StringField('Name', validators=[DataRequired()], default="freq")
+	job_name = StringField('Name', validators=[DataRequired()], default="")
 	task_name = SelectField('Task Type', validators=[DataRequired()], choices = task_list)
 	
 	param_metadata = HiddenField('Parameter Metadata')
 
-	param1 = StringField('', default="author:glantz")
+	param1 = StringField('', default="")
 	seed_task = SelectField('Input Task')
 
-	param2 = StringField('', default="carcinogen")
+	param2 = StringField('', default="")
 
 	submit = SubmitField('Schedule Job')
 
