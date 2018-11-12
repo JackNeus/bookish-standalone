@@ -20,8 +20,12 @@ class ScheduleForm(FlaskForm):
 	param_metadata = HiddenField('Parameter Metadata')
 
 	param1 = StringField('', default="dummy")
-	seed_task = SelectField('Input Task', choices = controller.get_seed_jobs())
+	seed_task = SelectField('Input Task')
 
 	param2 = StringField('', default="carcinogen")
 
 	submit = SubmitField('Schedule Job')
+
+	def __init__(self, *args, **kwargs):
+		super().__init__(*args, **kwargs)
+		self.seed_task.choices = controller.get_seed_jobs()
