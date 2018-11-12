@@ -25,3 +25,15 @@ def kill_job(id):
 		return True
 	except:
 		return False
+
+def get_job_results(id):
+	job = get_job_entry(id)
+	if not job:
+		return None
+	try:
+		f = open(current_app.config["TASK_RESULT_PATH"] + id)
+		data = f.read(-1)
+		f.close()
+		return data
+	except FileNotFoundError:
+		return "Results could not be found."

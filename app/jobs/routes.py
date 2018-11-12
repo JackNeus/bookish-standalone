@@ -47,3 +47,16 @@ def kill(id):
 	if not controller.kill_job(id):
 		flash("Failed to cancel job. Job may still be running.")
 	return redirect(url_for("jobs.jobs_index"))
+
+
+@bp.route('jobs/view/<id>')
+@login_required
+def view(id):
+	# TODO: Prevent users from viewing each other's jobs?
+	job = controller.get_job_entry(id)
+	results = controller.get_job_results(id)
+	if job.task == "word_freq":
+		return render_template("jobs/ngram_viewer.html", data = results)
+	else:
+		return render_template("jobs/default_viewer.html", data = results)
+	return redirect(url_for("jobs.jobs_index"))

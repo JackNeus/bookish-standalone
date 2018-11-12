@@ -8,6 +8,7 @@
 			<th scope="col">Task</th>
 			<th scope="col">Job Name</th>
 			<th scope="col">Status</th>
+			<th scope="col"></th>
 			<th scope="col">Started</th>
 			<th scope="col">Finished</th>
 			<th scope="col">Progress</th>
@@ -21,11 +22,20 @@
 					<td>{{ jobs[i].task }}</td>
 					<td>{{ jobs[i].name }}</td>
 					<td>{{ jobs[i].get_status() }}</td>
+					<td>
+						{% if jobs[i].get_status() == "Completed" %}
+							<a href="jobs/view/{{jobs[i].id}}">View Results</a>
+						{% endif %}
+					</td>
 					<td>{{ jobs[i].time_started }}</td>
 					<td></td>
 					<td>{{ jobs[i].get_progress() }}</td>
 					<td>{{ jobs[i].description if jobs[i].description else "" }}</td>
-					<td><a href="jobs/kill/{{jobs[i].id}}">Abort Job</a></td>
+					<td>
+						{% if jobs[i].get_status() in ["Queued", "Running"] %}
+							<a href="jobs/kill/{{jobs[i].id}}">Abort Job</a>
+						{% endif %}
+					</td>
 				</tr>
 			{% endfor %}
 		</tbody>
