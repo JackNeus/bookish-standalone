@@ -12,6 +12,7 @@
 			<th scope="col">Finished</th>
 			<th scope="col">Progress</th>
 			<th scope="col">Description</th>
+			<th scope="col"></th>
 		</thead>
 		<tbody>
 			{% for i in range(jobs|length) %}
@@ -24,6 +25,7 @@
 					<td></td>
 					<td>{{ jobs[i].get_progress() }}</td>
 					<td>{{ jobs[i].description if jobs[i].description else "" }}</td>
+					<td><a href="jobs/kill/{{jobs[i].id}}">Abort Job</a></td>
 				</tr>
 			{% endfor %}
 		</tbody>
