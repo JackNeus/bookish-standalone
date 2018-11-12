@@ -27,7 +27,7 @@ class KillJob(Job):
             while True:
                 res = conn.srem(kill_key, id)
                 if res > 0:
-                    set_task_status("Aborted")
+                    set_task_status("Aborted", job_id = id)
                     os.kill(os.getpid(), signal.SIGKILL)
                 time.sleep(interval)
 
