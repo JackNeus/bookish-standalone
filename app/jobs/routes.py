@@ -17,7 +17,7 @@ def schedule():
 	if form.validate_on_submit():
 		task = tasks.resolve_task(form.task_name.data)
 		job_name = form.job_name.data
-		params = form.params.data.split()
+		params = form.params.data.split(" ")
 		try:
 			scheduler.schedule_job(task, params, job_name)
 		except Exception as e:

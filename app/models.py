@@ -33,8 +33,11 @@ class JobEntry(Document):
 
     def get_progress(self):
         job = self.get_rq_job()
-        return job.meta.get('progress', 0) if job is not None else 100
-
+        if job is None:
+            return "100.00"
+        progress = job.meta.get('processed', 0) / job.meta.get('size', 1) * 100
+        return "%.2f" % progress
+        
     def update_status(self):
         # If in the app, do the following:
         if has_app_context():
