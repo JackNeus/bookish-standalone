@@ -61,6 +61,16 @@ var init_chart = function() {
 		    		ticks: {
 		    			suggestedMin: 0,
 		    			suggestedMax: 0.001
+		    		},
+		    		scaleLabel: {
+		    			display: true,
+		    			labelString: '% of words'
+		    		}
+		    	}],
+		    	xAxes: [{
+		    		scaleLabel: {
+		    			display: true,
+		    			labelString: 'year'
 		    		}
 		    	}]
 		    }
