@@ -110,11 +110,11 @@ def word_freq_helper(files, keywords):
     min_year = int(min(years))
     max_year = int(max(years))
     years = range(min_year, max_year+1)
-    global_word_freqs = init_dict(years, init_dict(keywords, 0))
+    global_word_freqs = init_dict(keywords, init_dict(years, 0))
     corpus_size = init_dict(years, 0)
     for year, freqs, file_size in word_freqs:
         for word, frequency in freqs.items():
-            global_word_freqs[year][word] += frequency
+            global_word_freqs[word][year] += frequency
         corpus_size[year] += file_size
     # Convert absolute count to percentage
     #for year in global_word_freqs:

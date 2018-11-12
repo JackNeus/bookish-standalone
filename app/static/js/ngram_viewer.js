@@ -1,7 +1,41 @@
 var ngram_chart;
 var chart_data = {};
-var x_min = 1960;
-var x_max = 1980;
+var x_min = 10000;
+var x_max = 0;
+
+/* Utilities */
+
+var free_colors = new Set([
+	"#3e95cd", 
+	"#8e5ea2", 
+	"#3cba9f", 
+	"#e8c3b9", 
+	"#c45850"]);
+var used_colors = new Set();
+
+// Picks a color from free_colors and
+// returns it. That color is moved
+// to used_colors.
+// TODO: When there are no free colors, 
+// return a default color.
+var use_color = function() {
+	let color = free_colors.values().next().value;
+	free_colors.delete(color);
+	used_colors.add(color);
+	return color;
+}
+
+// Move color from used_colors to 
+// free_colors. If color not in
+// used_colors, do nothing.
+var unuse_color = function(color) {
+	if (used_colors.has(color)) {
+		used_colors.delete(color);
+		free_colors.add(color);
+	}
+}
+
+/* End Utilities */
 
 var generate_labels = function() {
 	let labels = [];
@@ -51,7 +85,7 @@ var add_dataset = function(label, data) {
 	});
 	// Render new datasets.
 	ngram_chart.update();
-	add_to_list(label);
+	///add_to_list(label);
 }
 
 var remove_dataset = function(label) {
@@ -96,36 +130,8 @@ var add_to_list = function(label) {
 	});
 }
 
+
 init_chart();
-
-/* Utilities */
-
-var free_colors = new Set([
-	"#3e95cd", 
-	"#8e5ea2", 
-	"#3cba9f", 
-	"#e8c3b9", 
-	"#c45850"]);
-var used_colors = new Set();
-
-// Picks a color from free_colors and
-// returns it. That color is moved
-// to used_colors.
-// TODO: When there are no free colors, 
-// return a default color.
-var use_color = function() {
-	let color = free_colors.values().next().value;
-	free_colors.delete(color);
-	used_colors.add(color);
-	return color;
-}
-
-// Move color from used_colors to 
-// free_colors. If color not in
-// used_colors, do nothing.
-var unuse_color = function(color) {
-	if (used_colors.has(color)) {
-		used_colors.delete(color);
-		free_colors.add(color);
-	}
+for (var index in task_results) {
+	add_dataset(index, task_results[index])
 }
