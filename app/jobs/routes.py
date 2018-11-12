@@ -12,6 +12,7 @@ def jobs_index():
 	return render_template("jobs/jobs.html", jobs=scheduler.get_user_jobs(current_user.get_id()))
 
 @bp.route('/schedule', methods=["GET", "POST"])
+@login_required
 def schedule():
 	form = ScheduleForm()
 	if form.validate_on_submit():
@@ -37,7 +38,9 @@ def schedule():
 	#return redirect(url_for('jobs.jobs_index'))
 
 @bp.route('jobs/kill/<id>')
+@login_required
 def kill(id):
+	# TODO: Prevent users from cancelling each other's jobs
 	job = controller.get_job_entry(id)
 	if job is None:
 		flash("Job does not exist.")
