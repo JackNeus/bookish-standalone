@@ -1,11 +1,16 @@
 {% extends 'base.html' %}
 {% import 'bootstrap/wtf.html' as wtf %}
 
+{% block scripts %}
+	{{ super() }}
+  <script type="text/javascript" src="/static/js/schedule.js"></script>		
+{% endblock %}
+
 {% block app_content %}
 <a class="btn btn-primary" href="/jobs" role="button">View Your Jobs</a>
 <div class="row">
 	<div class="col-md-4">
-		{{ wtf.quick_form(form) }}
+		{{ wtf.quick_form(form, id="schedule-form") }}
 	</div>
 </div>
 {% endblock %}
