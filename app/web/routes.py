@@ -1,11 +1,12 @@
-from flask import current_app, render_template, jsonify
+from flask import current_app, redirect, render_template, jsonify, url_for
 from app.ngram import ngram, ucsf_aggregate
 
 from app.web import bp
 
 @bp.route('/')
 def index():
-	return render_template("index.html")
+	return redirect(url_for('jobs.jobs'))
+	#return render_template("index.html")
 
 @bp.route('/api/ngram/<word>/<divide>')
 def api(word, divide):
