@@ -34,21 +34,6 @@ var render_paramters = function(obj) {
 		let task_field = $('#'+task_param);
 		task_field.show();
 	}
-/*
-	$('#param_count').val(task_params.length);
-
-	for (let i = 0; i < task_params.length; i++) {
-		let label = $('.control-label[for="param' + (i+1) + '"]');
-		label.text(task_params[i]);
-		label.show();
-		$("#param" + (i+1)).show();
-	}
-	for (let i = task_params.length; i < max_parameters; i++) {
-		let label = $('.control-label[for="param' + (i+1) + '"]');
-		label.hide();
-		$("#param" + (i+1)).hide()
-	}
-*/
 }
 
 $("#task_name").change(function(){
