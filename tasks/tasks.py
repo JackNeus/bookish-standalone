@@ -73,6 +73,10 @@ def ucsf_api_aggregate(query):
 
 def word_freq(file_list_path, keywords):
     init_job()
+    
+    if isinstance(keywords, str):
+        keywords = keywords.split()
+
     # TODO: Replace rq_results with a config file.
     # TODO: Make sure file_list_path is a valid task ID.
     file_list_file = open('rq_results/' + file_list_path)
