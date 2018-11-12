@@ -1,3 +1,4 @@
+import os
 from flask import current_app
 from rq.job import Job
 from tasks.worker import KillJob
@@ -25,6 +26,26 @@ def kill_job(id):
 		return True
 	except:
 		return False
+
+def delete_job(id):
+	job = get_job_entry(id)
+	if job is None:
+		return False
+		
+	try:
+		job.delete()
+	except:
+		return False
+
+	# Additional cleanup, but not a huge deal if it fails.
+	try: 
+		os.remove(current_app.config["TASK_RESULT_PATH"] + id)
+		print("Results file (%s) removed." %id)
+	except Exception as e:
+		raise e
+		pass
+
+	return True
 
 def get_job_results(id):
 	job = get_job_entry(id)

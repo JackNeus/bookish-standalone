@@ -19,7 +19,7 @@
 			{% for i in range(jobs|length) %}
 				<tr>
 					<th scope="row">{{ i }}</th>
-					<td>{{ jobs[i].task }}</td>
+					<td title="{{ jobs[i].id }}">{{ jobs[i].task }}</td>
 					<td>{{ jobs[i].name }}</td>
 					<td>{{ jobs[i].get_status() }}</td>
 					<td>
@@ -34,6 +34,8 @@
 					<td>
 						{% if jobs[i].get_status() in ["Queued", "Running"] %}
 							<a href="jobs/kill/{{jobs[i].id}}">Abort Job</a>
+						{% else %}
+							<a href="jobs/delete/{{jobs[i].id}}">Delete Job</a>
 						{% endif %}
 					</td>
 				</tr>
