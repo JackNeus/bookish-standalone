@@ -12,14 +12,14 @@ def NonNegative(form, field):
 	if field_val < 0:
 		raise ValidationError("Field must be non-negative.")
 
-task_list = [("ngram", "NGram"), ("ucsf_api_aggregate", "UCSF API Call")]
+task_list = [("ngram", "NGram"), ("ucsf_api_aggregate", "UCSF API Call")][::-1]
 class ScheduleForm(FlaskForm):
 	job_name = StringField('Name', validators=[DataRequired()], default="freq")
 	task_name = SelectField('Task Type', validators=[DataRequired()], choices = task_list)
 	
 	param_metadata = HiddenField('Parameter Metadata')
 
-	param1 = StringField('', default="dummy")
+	param1 = StringField('', default="author:glantz")
 	seed_task = SelectField('Input Task')
 
 	param2 = StringField('', default="carcinogen")

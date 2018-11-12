@@ -25,7 +25,7 @@ def resolve_task(task_name):
 # Returns list of document IDs matching the query.
 
 def ucsf_api_aggregate(query):
-    init_job()
+    init_job([query])
     print(query)
 
     # CONSTANTS:
@@ -42,6 +42,7 @@ def ucsf_api_aggregate(query):
     r = requests.get(url = base_url, params = parameters)
     r = r.json()
     total_items = r["response"]["numFound"]
+    set_task_metadata("files_found", total_items)
 
     # Calculate number of pages.
     num_pages = math.ceil(total_items * 1.0 / page_size)

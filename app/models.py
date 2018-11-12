@@ -10,12 +10,15 @@ class JobEntry(Document):
     id = StringField(required = True, primary_key = True) 
     task = StringField(required = True)
     name = StringField(required = True, unique = True)
-    description = StringField(max_length = 128)
+    params = ListField(field = StringField(), default = [])
     user_id = StringField(required = True)
     status = StringField(required = True)
     complete = BooleanField(required = True, default = False)
     time_started = DateTimeField(required = True, default = datetime.now())
     time_finished = DateTimeField()
+
+    # Generic metadata dict.
+    task_metadata = DictField()
 
     def get_rq_job(self):
         if not has_app_context():
@@ -31,10 +34,21 @@ class JobEntry(Document):
         self.save()
         return self.status
 
+    def get_description(self):
+        try:
+            if self.task == "ucsf_api_aggregate":
+                return "%d files found. (%s)" % (self.task_metadata["files_found"], ",".join(self.params))
+            return ",".join(self.params)
+        except Exception as e:
+            return ""
+
     def get_progress(self):
         job = self.get_rq_job()
         if job is None:
-            return "100.00"
+            if self.get_status() == "Completed":
+                return "100.00"
+            else:
+                return ""
         progress = job.meta.get('processed', 0) / job.meta.get('size', 1) * 100
         return "%.2f" % progress
         

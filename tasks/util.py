@@ -26,13 +26,14 @@ def init_dict(keys, default_value):
         new_dict[k] = copy.deepcopy(default_value)
     return new_dict
 
-def init_job():
+def init_job(params = []):
     # RQ setup.
     job = get_current_job()
     if job: 
         print("Job exists (%s)" % job.get_id())
         init_db_connection()
         set_task_status('Running')
+        set_task_params([str(param) for param in params])
 
         job.meta['processed'] = 0
         job.save_meta()
@@ -44,18 +45,6 @@ def get_job_entry(id):
     if len(job) != 1:
         return None
     return job[0]
-
-def inc_task_processed(amt = 1):
-    job = get_current_job()
-    if job:
-        job.meta['processed'] += amt
-        job.save_meta()
-
-def set_task_size(size):
-    job = get_current_job()
-    if job:
-        job.meta['size'] = size
-        job.save_meta()
 
 def get_task_status(job = None):
     if not job:
@@ -82,6 +71,35 @@ def set_task_status(status, job = None, job_id = None):
     else:
         # TODO: Raise exception
         pass
+
+def set_task_params(params):
+    print("Here", params)
+    job = get_current_job()
+    print(job)
+    job_entry = get_job_entry(job.get_id())
+    job_entry.params = params
+    job_entry.save()
+
+def inc_task_processed(amt = 1):
+    job = get_current_job()
+    if job:
+        job.meta['processed'] += amt
+        job.save_meta()
+
+def set_task_size(size):
+    job = get_current_job()
+    if job:
+        job.meta['size'] = size
+        job.save_meta()
+
+def set_task_metadata(k, v, job = None):
+    if not job:
+        job = get_current_job()
+    if job:
+        job_id = job.get_id()
+        job_entry = get_job_entry(job_id)
+        job_entry.task_metadata[k] = v
+        job_entry.save()
 
 def write_task_results(data):
     job = get_current_job()
