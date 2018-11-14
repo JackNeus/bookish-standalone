@@ -23,7 +23,6 @@ def schedule():
 		params = []
 		for field in str(form["param_metadata"].data).split(";"):
 			params.append(form[field].data)
-		print(params)
 		try:
 			controller.schedule_job(task, params, job_name)
 		except Exception as e:
@@ -48,6 +47,16 @@ def kill(id):
 		flash("Failed to cancel job. Job may still be running.")
 	return redirect(url_for("jobs.jobs_index"))
 
+@bp.route('jobs/delete/<id>')
+@login_required
+def delete(id):
+	# TODO: Prevent users from cancelling each other's jobs
+	job = controller.get_job_entry(id)
+	if job is None:
+		flash("Job does not exist.")
+	if not controller.delete_job(id):
+		flash("Failed to delete job.")
+	return redirect(url_for("jobs.jobs_index"))
 
 @bp.route('jobs/view/<id>')
 @login_required
