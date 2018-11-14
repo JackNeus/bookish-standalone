@@ -5,6 +5,7 @@ from flask import Flask
 from flask_bootstrap import Bootstrap
 from flask_login import LoginManager
 from config import Config
+from app.nav import nav
 
 login_manager = LoginManager()
 bootstrap = Bootstrap()
@@ -27,6 +28,8 @@ def create_app(config_class=Config):
 		print("Database could not be configured.")
 		return None
 		
+	nav.init_app(app)
+
 	login_manager.init_app(app)
 	bootstrap.init_app(app)
 
