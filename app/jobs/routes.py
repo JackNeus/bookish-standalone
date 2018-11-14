@@ -14,15 +14,16 @@ def jobs_index():
 @bp.route('/schedule', methods=["GET", "POST"])
 @login_required
 def schedule():
+	seed_jobs = controller.get_seed_jobs()
 	form = ScheduleForm()
 	if form.validate_on_submit():
 		task = tasks.resolve_task(form.task_name.data)
 		job_name = form.job_name.data
-		param_count = int(form.param_count.data);
+
 		params = []
-		for i in range(1, param_count+1):
-			params.append(form["param%d" % i].data)
-		
+		for field in str(form["param_metadata"].data).split(";"):
+			params.append(form[field].data)
+		print(params)
 		try:
 			scheduler.schedule_job(task, params, job_name)
 		except Exception as e:

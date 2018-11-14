@@ -9,7 +9,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 class JobEntry(Document):
     id = StringField(required = True, primary_key = True) 
     task = StringField(required = True)
-    name = StringField(required = True)
+    name = StringField(required = True, unique = True)
     description = StringField(max_length = 128)
     user_id = StringField(required = True)
     status = StringField(required = True)
