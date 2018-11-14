@@ -25,8 +25,7 @@ def resolve_task(task_name):
 # Returns list of document IDs matching the query.
 
 def ucsf_api_aggregate(query):
-    init_job()
-    print(query)
+    init_job([query])
 
     # CONSTANTS:
     # Base URL of API.
@@ -42,6 +41,7 @@ def ucsf_api_aggregate(query):
     r = requests.get(url = base_url, params = parameters)
     r = r.json()
     total_items = r["response"]["numFound"]
+    set_task_metadata("files_found", total_items)
 
     # Calculate number of pages.
     num_pages = math.ceil(total_items * 1.0 / page_size)
@@ -72,10 +72,10 @@ def ucsf_api_aggregate(query):
     return_from_task(doc_ids)
 
 def word_freq(file_list_path, keywords):
-    init_job()
-    
     if isinstance(keywords, str):
         keywords = keywords.split()
+
+    init_job([file_list_path[len("rq_results/"):], " ".join(keywords)])
 
     # TODO: Replace rq_results with a config file.
     # TODO: Make sure file_list_path is a valid task ID.
@@ -104,7 +104,8 @@ def word_freq_helper(files, keywords):
 
     word_freqs = multiprocessing.Pool(1).starmap(get_word_freq, zip(files, repeat(keywords)))
     # Currrently, discard any files that couldn't be found.
-    word_freqs = filter(lambda x: x is not None, word_freqs)
+    word_freqs = [x for x in word_freqs if x is not None]
+    set_task_metadata("files_analyzed", len(word_freqs))
 
     # Merge dictionaries.
     years = [x[1] for x in files]

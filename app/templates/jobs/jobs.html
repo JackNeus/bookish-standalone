@@ -30,7 +30,7 @@
 					<td>{{ jobs[i].time_started }}</td>
 					<td></td>
 					<td>{{ jobs[i].get_progress() }}</td>
-					<td>{{ jobs[i].description if jobs[i].description else "" }}</td>
+					<td>{{ jobs[i].get_description() }}</td>
 					<td>
 						{% if jobs[i].get_status() in ["Queued", "Running"] %}
 							<a href="jobs/kill/{{jobs[i].id}}">Abort Job</a>
