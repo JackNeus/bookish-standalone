@@ -4,9 +4,13 @@ from flask_login import LoginManager, login_user, logout_user, current_user
 from app import login_manager
 from app.models import User, UserEntry
 
-UserDoesNotExistError = Exception("User does not exist.")
-InvalidUserError = Exception("Incorrect username or password.")
-
+class UserDoesNotExistError(Exception):
+	pass
+class InvalidUserError(Exception):
+	pass
+class InvalidPasswordError(Exception):
+	pass
+	
 def get_user_entry(params):
 	user_entry = UserEntry.objects(**params)
 	if len(user_entry) != 1:
@@ -45,3 +49,12 @@ def login(username, password):
 
 def logout():
 	logout_user()
+
+def change_password(user, current_password, password):
+	user = get_user_entry({'username': user})
+	
+	if user is None:
+		raise UserDoesNotExistError
+	if not user.check_password(current_password):
+		raise InvalidPasswordError
+	user.set_password(password)

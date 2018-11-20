@@ -87,9 +87,9 @@ class User(UserMixin):
         return self.uid
 
 class UserEntry(Document):
-    username = StringField(required = True)
+    username = StringField(required = True, unique = True)
     name = StringField(required = True, default = "Bob")
-    password_hash = StringField(required = True)
+    password_hash = StringField(required = True, default = '')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
