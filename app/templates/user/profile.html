@@ -2,8 +2,19 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-	<div class="col-md-3">
-		{{ wtf.quick_form(change_pwd_form) }}
+	<div class="row">
+		<div class="col-md-3">
+			<h4>Change Password</h4>
+			{{ wtf.quick_form(change_pwd_form) }}
+		</div>
+	</div>
+	<div class="row margin-top">
+		{% if current_user.is_admin %}
+		<div class="col-md-3">
+			<h4>Add User</h4>
+			{{ wtf.quick_form(add_user_form) }}
+		</div>
+		{% endif %}
 	</div>
 {% endblock %}
 
