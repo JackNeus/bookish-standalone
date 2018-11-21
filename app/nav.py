@@ -12,6 +12,7 @@ def navbar():
 		navbar_elements.extend([
 			View('My Jobs', 'jobs.jobs_index'),
 			View('Schedule Job', 'jobs.schedule'),
+			View('My Account', 'user.profile'),
 			View('Logout', 'user.logout')
 		])
 	else:

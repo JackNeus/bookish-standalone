@@ -76,9 +76,10 @@ class JobEntry(Document):
         self.update_status()
         
 class User(UserMixin):
-    def __init__(self, uid, username):
+    def __init__(self, uid, username, is_admin = False):
         self.uid = str(uid)
         self.username = username
+        self.is_admin = is_admin
         
     def is_authenticated(self):
         return True
@@ -87,9 +88,10 @@ class User(UserMixin):
         return self.uid
 
 class UserEntry(Document):
-    username = StringField(required = True)
-    name = StringField(required = True, default = "Bob")
-    password_hash = StringField(required = True)
+    username = StringField(required = True, unique = True)
+    name = StringField(required = True, default = '')
+    password_hash = StringField(required = True, default = '')
+    is_admin = BooleanField(default = False)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
