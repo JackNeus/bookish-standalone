@@ -27,7 +27,7 @@ def get_user_jobs(user_id):
 # Need to first start script start_worker.py.
 def schedule_job(task, params, name = None):
 	# Temporarily made TTL 0 to test DB logging.
-	job = current_app.task_queue.enqueue(task, *params, result_ttl = 0, ttl = -1)
+	job = current_app.task_queue.enqueue(task, *params, result_ttl = 0, timeout = -1)
 	job_id = job.get_id()
 	job.meta['progress'] = 0.0
 	job.save_meta()
@@ -76,8 +76,15 @@ def get_job_results(id):
 	if not job:
 		return None
 	try:
-		f = open(current_app.config["TASK_RESULT_PATH"] + id)
-		data = f.read(-1)
+		filename = current_app.config["TASK_RESULT_PATH"] + id
+		f = open(filename)
+		file_size = os.path.getsize(filename)
+		# Read at most ~500K
+		max_file_size = 500000
+		data = f.read(min(file_size, max_file_size))
+		# If data was truncated
+		if file_size > max_file_size:
+			data += "[truncated]\n"
 		f.close()
 		return data
 	except FileNotFoundError:
