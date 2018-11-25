@@ -75,11 +75,10 @@ def word_freq(file_list_path, keywords):
     if isinstance(keywords, str):
         keywords = keywords.split()
 
-    init_job([file_list_path[len("rq_results/"):], " ".join(keywords)])
+    init_job([file_list_path[len(config["TASK_RESULT_PATH"]):], " ".join(keywords)])
 
-    # TODO: Replace rq_results with a config file.
     # TODO: Make sure file_list_path is a valid task ID.
-    file_list_file = open('rq_results/' + file_list_path)
+    file_list_file = open(config["TASK_RESULT_PATH"] + file_list_path)
     def extract(line):
         line = line.split(" ")
         line[0] += ".clean"

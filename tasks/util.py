@@ -105,8 +105,8 @@ def write_task_results(data):
         return
     else:
         filename = job.get_id()
-    # TODO: Put this in config file without using current_app
-    path = 'rq_results/'
+        
+    path = config["TASK_RESULT_PATH"]
     f = open(path + filename, "w")
 
     if isinstance(data, list):
