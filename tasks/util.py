@@ -98,16 +98,28 @@ def set_task_metadata(k, v, job = None):
         job_entry.task_metadata[k] = v
         job_entry.save()
 
-def write_task_results(data):
+def open_task_output_file():
     job = get_current_job()
     if job is None:
         # TODO: Raise exception
-        return
+        return None
     else:
         filename = job.get_id()
         
     path = config["TASK_RESULT_PATH"]
-    f = open(path + filename, "w")
+    f = open(path + filename, "w")  
+    return f  
+
+# 11/26/18: Introduced new parameter file_obj.
+# If None, the function opens a file, writes to it, and closes the file.
+# If not None, the function will write to the file, but will not open or close it.
+def write_task_results(data, file_obj = None):
+    if file_obj is None:
+        f = open_task_output_file()
+        if f is None:
+            return    
+    else:
+        f = file_obj
 
     if isinstance(data, list):
         for row in data:
@@ -115,8 +127,10 @@ def write_task_results(data):
     elif isinstance(data, dict):
         f.write(json.dumps(data))
     else:
-        f.write(str(data))
-    f.close()
+        f.write(str(data) + '\n')
+   
+    if file_obj is None:
+        f.close()
 
 def return_from_task(return_value):
     write_task_results(return_value)
