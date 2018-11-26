@@ -41,19 +41,25 @@ def ucsf_api_aggregate(query):
     r = requests.get(url = base_url, params = parameters)
     r = r.json()
     total_items = r["response"]["numFound"]
-    set_task_metadata("files_found", total_items)
+    set_task_metadata("files_count", total_items)
+    files_found = 0
+    set_task_metadata("files_found", files_found)
 
     # Calculate number of pages.
     num_pages = math.ceil(total_items * 1.0 / page_size)
     set_task_size(num_pages)
     print("%d pages total." % num_pages)
 
-    doc_ids = []
+    output_file = open_task_output_file()
+
     # Request each page.
     for page in range(num_pages):
         parameters["start"] = page * page_size
-        r = requests.get(url = base_url, params = parameters)
-        r = r.json()
+        try:
+            r = requests.get(url = base_url, params = parameters)
+            r = r.json()
+        except:
+            continue
 
         def extract_data(doc_metadata):
             document_year = ""
@@ -63,13 +69,19 @@ def ucsf_api_aggregate(query):
             document_location = "txt/ucsf/" + "/".join([c for c in document_id[:4]] + [document_id, document_id]) + ".ocr"
             return document_location + document_year 
 
-        doc_ids.extend(list(map(extract_data, r["response"]["docs"])))
+        doc_ids = list(map(extract_data, r["response"]["docs"])) 
+        write_task_results(doc_ids, output_file)
+
+        files_found += len(doc_ids)
+        set_task_metadata("files_found", files_found)
+        
+
         print("Done page %d." % page)
 
         # Update RQ progress, if job is being run as an RQ task.
         inc_task_processed()
 
-    return_from_task(doc_ids)
+    output_file.close()
 
 def word_freq(file_list_path, keywords):
     if isinstance(keywords, str):

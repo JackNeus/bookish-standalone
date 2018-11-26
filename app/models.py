@@ -37,7 +37,8 @@ class JobEntry(Document):
     def get_description(self):
         try:
             if self.task == "ucsf_api_aggregate":
-                return "%d files found. (%s)" % (self.task_metadata["files_found"], ",".join(self.params))
+                return "%d/%d files found. (%s)" % (self.task_metadata["files_found"], 
+                    self.task_metadata["files_count"], ",".join(self.params))
             if self.task == "word_freq":
                 seed_task_id = self.params[0]
                 seed_task_name = "n/a"
