@@ -41,7 +41,9 @@ def ucsf_api_aggregate(query):
     r = requests.get(url = base_url, params = parameters)
     r = r.json()
     total_items = r["response"]["numFound"]
-    set_task_metadata("files_found", total_items)
+    set_task_metadata("files_count", total_items)
+    files_found = 0
+    set_task_metadata("files_found", files_found)
 
     # Calculate number of pages.
     num_pages = math.ceil(total_items * 1.0 / page_size)
@@ -53,8 +55,11 @@ def ucsf_api_aggregate(query):
     # Request each page.
     for page in range(num_pages):
         parameters["start"] = page * page_size
-        r = requests.get(url = base_url, params = parameters)
-        r = r.json()
+        try:
+            r = requests.get(url = base_url, params = parameters)
+            r = r.json()
+        except:
+            continue
 
         def extract_data(doc_metadata):
             document_year = ""
@@ -66,6 +71,10 @@ def ucsf_api_aggregate(query):
 
         doc_ids = list(map(extract_data, r["response"]["docs"])) 
         write_task_results(doc_ids, output_file)
+
+        files_found += len(doc_ids)
+        set_task_metadata("files_found", files_found)
+        
 
         print("Done page %d." % page)
 

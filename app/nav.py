@@ -7,7 +7,6 @@ nav = Nav()
 @nav.navigation()
 def navbar():
 	navbar_elements = []
-	print(current_user)
 	if current_user.is_authenticated:
 		navbar_elements.extend([
 			View('My Jobs', 'jobs.jobs_index'),
@@ -16,7 +15,6 @@ def navbar():
 			View('Logout', 'user.logout')
 		])
 	else:
-		print("HERE!")
 		navbar_elements.extend([
 			View('Login', 'user.login')
 		])
