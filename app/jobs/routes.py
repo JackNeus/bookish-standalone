@@ -1,6 +1,7 @@
-from flask import current_app, flash, redirect, render_template, url_for
+from flask import current_app, flash, jsonify, redirect, render_template, url_for
 from flask_security import login_required
 from flask_login import current_user
+import json
 
 from app.jobs import bp, controllers as controller
 from app.jobs.forms import ScheduleForm
@@ -9,7 +10,13 @@ from tasks import tasks
 @bp.route('/jobs')
 @login_required
 def jobs_index():
-	return render_template("jobs/jobs.html", jobs=controller.get_user_jobs(current_user.get_id()))
+	return render_template("jobs/jobs.html", jobs=controller.get_user_jobs_json(current_user.get_id()))
+
+@bp.route('/jobs.json')
+@login_required
+def user_jobs_json():
+	jobs = controller.get_user_jobs_json(current_user.get_id())
+	return jsonify(jobs)
 
 @bp.route('/schedule', methods=["GET", "POST"])
 @login_required
