@@ -103,6 +103,8 @@ def set_task_status_bare(status, job = None, job_id = None):
             job = get_current_job()
         if job:
             job_id = job.get_id()
+            
+    init_db_connection()
     job_entry = get_job_entry(job_id)
     job_entry.status = status
     job_entry.save()
