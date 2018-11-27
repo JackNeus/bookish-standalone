@@ -8,8 +8,10 @@ from queue import Queue
 
 from app.models import JobEntry
 
-from config import Config
-config = vars(Config)
+config = None
+def set_config(config_):
+    global config
+    config = config_
 
 def init_db_connection():
     register_connection (

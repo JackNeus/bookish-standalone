@@ -1,31 +1,33 @@
 # Custom RQ worker.
+from config import DevConfig, ProdConfig
+from tasks.util import set_config
 
-import sys
 from mongoengine import register_connection
 from rq import Connection, Worker
+import sys
 
-from config import Config
-config = vars(Config)
-
-# Initialize MongoDB Connection
-try:
-	register_connection (
-		alias = "default",
-		name = config["DB_NAME"],
-		username = config["DB_USER"],
-		password = config["DB_PASSWORD"],
-		host = config["DB_URL"],
-		port = config["DB_PORT"]
-	)
-except:
-	exit("Database could not be configured.")
+config_class = DevConfig
+if len(sys.argv) > 1:
+	mode = sys.argv[1]
+	if mode == "prod":
+		print("Running in production mode.")
+		config_class = ProdConfig
+	elif mode == "dev":
+		print("Running in development mode.")
+		config_class = DevConfig
+	else:
+		exit("Invalid argument.")
+else:
+	print("Running in development mode (default).")
+config = vars(config_class)
+set_config(config)
 
 from tasks.worker import BookishWorker
 
 # Provide queue names to listen to as arguments to this script,
 # similar to rq worker
 with Connection():
-    qs = sys.argv[1:] or [config['REDIS_QUEUE_NAME']]
+    qs = [config['REDIS_QUEUE_NAME']]
     print("Starting BookishWorker...")
     w = BookishWorker(qs)
     w.work()
