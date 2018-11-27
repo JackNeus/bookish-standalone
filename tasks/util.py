@@ -1,6 +1,7 @@
 import copy
 import json
 from mongoengine import register_connection
+import multiprocessing
 import threading
 from rq import get_current_job
 from queue import Queue
@@ -31,14 +32,30 @@ def init_job(params = []):
     job = get_current_job()
     if job: 
         print("Job exists (%s)" % job.get_id())
+
+        job.is_master = True        
         init_db_connection()
+        setattr(job, "db_obj_lock", threading.Lock())
+ 
         set_task_status('Running')
         set_task_params([str(param) for param in params])
 
         job.meta['processed'] = 0
         job.save_meta()
+
     else:
         print("Job DNE.")
+
+def init_slave():
+    job = get_current_job()
+    job.is_master = False
+    # Need to reregister DB connection.
+    init_db_connection()
+
+def get_pool():
+    return multiprocessing.Pool(config["NUM_CORES"], initializer = init_slave)
+
+### JOB ENTRY CODE
 
 def get_job_entry(id):
     job = JobEntry.objects(id = id)
@@ -55,7 +72,7 @@ def get_task_status(job = None):
             return None
         return job.status 
 
-def set_task_status(status, job = None, job_id = None):
+def set_task_db_field(k, v, job = None, job_id = None):
     if not job_id:
         if not job:
             job = get_current_job()
@@ -63,19 +80,41 @@ def set_task_status(status, job = None, job_id = None):
             job_id = job.get_id()
 
     if job_id:
-        print("Setting status: %s" % status)
         job_entry = get_job_entry(job_id)
-        job_entry.status = status
+
+        # Make sure DB write is thread-safe.
+        job.db_obj_lock.acquire(blocking=False)
+        setattr(job_entry, k, v)
         job_entry.save()
+        job.db_obj_lock.release()
     else:
         # TODO: Raise exception
-        pass
+        pass   
+
+def set_task_status(status, job = None, job_id = None):
+    set_task_db_field("status", status, job = job, job_id = job_id)
 
 def set_task_params(params):
-    job = get_current_job()
-    job_entry = get_job_entry(job.get_id())
-    job_entry.params = params
-    job_entry.save()
+    set_task_db_field("params", params)
+
+def set_task_metadata(k, v, job = None):
+    if not job:
+        job = get_current_job()
+    if job:
+        job_id = job.get_id()
+        job_entry = get_job_entry(job_id)
+
+        # Make sure DB write is thread-safe.
+        job.db_obj_lock.acquire(blocking=False)
+        job_entry.task_metadata[k] = v
+        job_entry.save()
+        job.db_obj_lock.release()
+
+### END JOB ENTRY CODE
+
+### RQ JOB CODE
+
+# TODO: Put this in metadata instead.
 
 def inc_task_processed(amt = 1):
     job = get_current_job()
@@ -89,14 +128,9 @@ def set_task_size(size):
         job.meta['size'] = size
         job.save_meta()
 
-def set_task_metadata(k, v, job = None):
-    if not job:
-        job = get_current_job()
-    if job:
-        job_id = job.get_id()
-        job_entry = get_job_entry(job_id)
-        job_entry.task_metadata[k] = v
-        job_entry.save()
+### END RQ JOB CODE
+
+### TASK OUTPUT FILE CODE
 
 def open_task_output_file():
     job = get_current_job()
@@ -134,7 +168,8 @@ def write_task_results(data, file_obj = None):
 
 def return_from_task(return_value):
     write_task_results(return_value)
-    #set_task_status('Done')
+
+### END TASK OUTPUT FILE CODE
 
 class InvalidArgumentError(Exception):
 	pass

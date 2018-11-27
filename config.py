@@ -19,3 +19,5 @@ class Config(object):
 	DB_PASSWORD = os.environ.get('DB_PASSWORD')
 
 	SESSION_LENGTH = 7
+
+	NUM_CORES = 1

@@ -67,7 +67,7 @@ def view(id):
 		return redirect(url_for("jobs.jobs_index"))
 
 	results = controller.get_job_results(id)
-	if job.task == "word_freq":
+	if job.task == "word_freq_task":
 		return render_template("jobs/ngram_viewer.html", data = results)
 	else:
 		return render_template("jobs/default_viewer.html", data = results)
