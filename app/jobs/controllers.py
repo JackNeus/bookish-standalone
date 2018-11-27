@@ -1,3 +1,5 @@
+import datetime
+import json
 import os
 import rq
 import time
@@ -29,6 +31,20 @@ def get_rq_job(id):
 
 def get_user_jobs(user_id):
 	return JobEntry.objects(user_id = user_id)
+
+def get_user_jobs_json(user_id):
+	def job_entry_to_json(job_entry):
+	    job = {
+	        "id": job_entry.id,
+	        "name": job_entry.name,
+	        "task": job_entry.task,
+	        "status": job_entry.get_status(),
+	        "time_started": datetime.date.strftime(job_entry.time_started, "%c"),
+	        "progress": job_entry.get_progress(),
+	        "description": job_entry.get_description()
+	        }
+	    return job
+	return [job_entry_to_json(job) for job in get_user_jobs(user_id)]
 
 # Need to first start script start_worker.py.
 def schedule_job(task, params, name = None):

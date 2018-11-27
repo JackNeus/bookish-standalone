@@ -1,5 +1,10 @@
 {% extends 'base.html' %}
 
+{% block scripts %}
+	{{ super() }}
+  <script type="text/javascript" src="/static/js/jobs.js"></script>		
+{% endblock %}
+
 {% block app_content %}
 	<table class="table">
 		<thead>
@@ -14,24 +19,24 @@
 			<th scope="col">Description</th>
 			<th scope="col"></th>
 		</thead>
-		<tbody>
+		<tbody id="jobs">
 			{% for i in range(jobs|length) %}
-				<tr>
+				<tr id="{{ jobs[i].id }}">
 					<th scope="row">{{ i }}</th>
-					<td title="{{ jobs[i].id }}">{{ jobs[i].task }}</td>
-					<td>{{ jobs[i].name }}</td>
-					<td>{{ jobs[i].get_status() }}</td>
-					<td>
-						{% if jobs[i].get_status() == "Completed" %}
+					<td id="id" title="{{ jobs[i].id }}">{{ jobs[i].task }}</td>
+					<td id="name">{{ jobs[i].name }}</td>
+					<td id="status">{{ jobs[i].status }}</td>
+					<td id="view-results">
+						{% if jobs[i].status == "Completed" %}
 							<a href="jobs/view/{{jobs[i].id}}">View Results</a>
 						{% endif %}
 					</td>
-					<td>{{ jobs[i].time_started }}</td>
+					<td id="time-started">{{ jobs[i].time_started }}</td>
 					<td></td>
-					<td>{{ jobs[i].get_progress() }}</td>
-					<td>{{ jobs[i].get_description() }}</td>
-					<td>
-						{% if jobs[i].get_status() in ["Queued", "Running"] %}
+					<td id="progress">{{ jobs[i].progress }}</td>
+					<td id="description">{{ jobs[i].description }}</td>
+					<td id="action">
+						{% if jobs[i].status in ["Queued", "Running"] %}
 							<a href="jobs/kill/{{jobs[i].id}}">Abort Job</a>
 						{% else %}
 							<a href="jobs/delete/{{jobs[i].id}}">Delete Job</a>
