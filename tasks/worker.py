@@ -52,6 +52,6 @@ class BookishWorker(Worker):
 
     def handle_job_failure(self, job, started_job_registry=None):
         if get_task_status(job) not in ["Aborting", "Aborted"]:
-            set_task_status("Failed", job = job)
+            set_task_status_bare("Failed", job)
         super().handle_job_failure(job = job, started_job_registry = started_job_registry)
 
