@@ -94,7 +94,6 @@ def set_task_db_field(k, v, job = None, job_id = None):
         pass   
 
 def set_task_status(status, job = None, job_id = None):    
-
     set_task_db_field("status", status, job = job, job_id = job_id)
 
 def set_task_status_bare(status, job = None, job_id = None):
@@ -104,7 +103,6 @@ def set_task_status_bare(status, job = None, job_id = None):
         if job:
             job_id = job.get_id()
             
-    init_db_connection()
     job_entry = get_job_entry(job_id)
     job_entry.status = status
     job_entry.save()

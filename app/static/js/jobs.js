@@ -3,32 +3,23 @@ setInterval(function() {
 		for (let i = 0; i < data.length; i++) {
 			let job = data[i];
 			let job_table_row = $("tr#"+job.id);
-			console.log(job.progress);
+
+			job_table_row.find("td#status").html(job.status);
 			job_table_row.find("td#progress").html(job.progress);
+			job_table_row.find("td#description").html(job.description);
+			
+			if (job.status === "Completed") {
+				job_table_row.find("td#view-results").html("<a href='jobs/view/"+job.id+"'>View Results</a>");
+			} else {
+				job_table_row.find("td#view-results").html("");
+			}
+
+			if (job.status === "Queued" || job.status === "Running") {
+				job_table_row.find("td#action").html("<a href='jobs/kill/"+job.id+"'>Abort Job</a>");
+			} else {
+				job_table_row.find("td#action").html("<a href='jobs/delete/"+job.id+"'>Delete Job</a>");
+			}
+				
 		}
-		/*{% for i in range(jobs|length) %}
-				<tr>
-					<th scope="row">{{ i }}</th>
-					<td title="{{ jobs[i].id }}">{{ jobs[i].task }}</td>
-					<td>{{ jobs[i].name }}</td>
-					<td>{{ jobs[i].status }}</td>
-					<td>
-						{% if jobs[i].status == "Completed" %}
-							<a href="jobs/view/{{jobs[i].id}}">View Results</a>
-						{% endif %}
-					</td>
-					<td>{{ jobs[i].time_started }}</td>
-					<td></td>
-					<td>{{ jobs[i].progress }}</td>
-					<td>{{ jobs[i].description }}</td>
-					<td>
-						{% if jobs[i].status in ["Queued", "Running"] %}
-							<a href="jobs/kill/{{jobs[i].id}}">Abort Job</a>
-						{% else %}
-							<a href="jobs/delete/{{jobs[i].id}}">Delete Job</a>
-						{% endif %}
-					</td>
-				</tr>
-		{% endfor %}*/
-	})
-}, 2500);
+	});
+}, 1500);
