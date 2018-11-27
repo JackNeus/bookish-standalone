@@ -1,6 +1,6 @@
 # Custom RQ worker.
 from config import DevConfig, ProdConfig
-from tasks.util import set_config
+from tasks.util import init_db_connection, set_config
 
 from mongoengine import register_connection
 from rq import Connection, Worker
@@ -22,6 +22,7 @@ else:
 config = vars(config_class)
 set_config(config)
 
+init_db_connection()
 from tasks.worker import BookishWorker
 
 # Provide queue names to listen to as arguments to this script,

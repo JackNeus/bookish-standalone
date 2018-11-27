@@ -18,8 +18,9 @@ class BookishJob(Job):
     def kill(self):
         """ Force kills the current job causing it to fail """
         if self.is_started:
-            set_task_status("Aborting", self)
+            set_task_status_bare("Aborting", job = self)
             self.connection.sadd(kill_key, self.get_id())
+
 
     def _execute(self):
         def check_kill(conn, id, interval=5):
@@ -27,7 +28,7 @@ class BookishJob(Job):
             while True:
                 res = conn.srem(kill_key, id)
                 if res > 0:
-                    set_task_status("Aborted", job_id = id)
+                    set_task_status_bare("Aborted", job_id = id)
                     os.kill(os.getpid(), signal.SIGKILL)
                 time.sleep(interval)
 
@@ -52,6 +53,6 @@ class BookishWorker(Worker):
 
     def handle_job_failure(self, job, started_job_registry=None):
         if get_task_status(job) not in ["Aborting", "Aborted"]:
-            set_task_status("Failed", job = job)
+            set_task_status_bare("Failed", job = job)
         super().handle_job_failure(job = job, started_job_registry = started_job_registry)
 

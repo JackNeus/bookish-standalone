@@ -49,7 +49,8 @@ def kill_job(id):
 	try:
 		job.kill()
 		return True
-	except:
+	except Exception as e:
+		raise e
 		return False
 
 def delete_job(id):
@@ -95,7 +96,7 @@ def get_seed_jobs():
 	if not current_user:
 		return []
 	print(current_user.get_id())
-	seed_tasks = ["ucsf_api_aggregate"]
+	seed_tasks = ["ucsf_api_aggregate_task"]
 	jobs = JobEntry.objects(task__in = seed_tasks, status = "Completed", user_id = current_user.get_id())
 	jobs = list(map(lambda x: (x.id, "%s (%s)" % (x.name, x.task)), jobs))
 	jobs.append(("dummy", "dummy job (all local files)"))
