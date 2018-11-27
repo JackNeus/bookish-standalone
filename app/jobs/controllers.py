@@ -49,7 +49,8 @@ def kill_job(id):
 	try:
 		job.kill()
 		return True
-	except:
+	except Exception as e:
+		raise e
 		return False
 
 def delete_job(id):

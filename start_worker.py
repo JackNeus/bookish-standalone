@@ -1,6 +1,6 @@
 # Custom RQ worker.
 from config import DevConfig, ProdConfig
-from tasks.util import init_db_connection,set_config
+from tasks.util import init_db_connection, set_config
 
 from mongoengine import register_connection
 from rq import Connection, Worker
