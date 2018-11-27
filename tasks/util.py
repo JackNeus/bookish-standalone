@@ -83,7 +83,7 @@ def set_task_db_field(k, v, job = None, job_id = None):
         job_entry = get_job_entry(job_id)
 
         # Make sure DB write is thread-safe.
-        job.db_obj_lock.acquire()
+        job.db_obj_lock.acquire(blocking=False)
         setattr(job_entry, k, v)
         job_entry.save()
         job.db_obj_lock.release()
@@ -105,7 +105,7 @@ def set_task_metadata(k, v, job = None):
         job_entry = get_job_entry(job_id)
 
         # Make sure DB write is thread-safe.
-        job.db_obj_lock.acquire()
+        job.db_obj_lock.acquire(blocking=False)
         job_entry.task_metadata[k] = v
         job_entry.save()
         job.db_obj_lock.release()
@@ -113,6 +113,8 @@ def set_task_metadata(k, v, job = None):
 ### END JOB ENTRY CODE
 
 ### RQ JOB CODE
+
+# TODO: Put this in metadata instead.
 
 def inc_task_processed(amt = 1):
     job = get_current_job()

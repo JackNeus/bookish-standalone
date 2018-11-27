@@ -36,16 +36,16 @@ class JobEntry(Document):
 
     def get_description(self):
         try:
-            if self.task == "ucsf_api_aggregate":
+            if self.task == "ucsf_api_aggregate_task":
                 return "%d/%d files found. (%s)" % (self.task_metadata["files_found"], 
                     self.task_metadata["files_count"], ",".join(self.params))
-            if self.task == "word_freq":
+            if self.task == "word_freq_task":
                 seed_task_id = self.params[0]
                 seed_task_name = "n/a"
                 seed_task = JobEntry.objects(id=seed_task_id)
                 if len(seed_task) > 0:
                     seed_task_name = seed_task[0].name
-                return "%d files analyzed. (%s, %s)" % (self.task_metadata["processed"], seed_task_name, self.params[1])
+                return "%d files analyzed. (%s, %s)" % (self.task_metadata["files_analyzed"], seed_task_name, self.params[1])
             return ",".join(self.params)
         except Exception as e:
             return "n/a"

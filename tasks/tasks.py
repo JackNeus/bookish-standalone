@@ -41,8 +41,8 @@ def ucsf_api_aggregate_task(query):
     r = requests.get(url = base_url, params = parameters)
     r = r.json()
     total_items = r["response"]["numFound"]
-    set_task_metadata("files_count", total_items)
     files_found = 0
+    set_task_metadata("files_count", total_items)
     set_task_metadata("files_found", files_found)
 
     # Calculate number of pages.
