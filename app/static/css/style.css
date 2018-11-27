@@ -41,3 +41,7 @@ body {
 .container-fluid {
 	max-width: 90%;
 }
+
+.flashes {
+	color: red;
+}
