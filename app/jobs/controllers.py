@@ -17,6 +17,12 @@ def get_job_entry(id):
         return None
     return job[0]
 
+def get_job_entry_by_name(name):
+    job = JobEntry.objects(name = name, user_id = current_user.get_id())
+    if len(job) != 1:
+        return None
+    return job[0]
+
 def get_rq_job(id):
 	job = BookishJob.fetch(id, connection = current_app.redis)
 	return job

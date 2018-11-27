@@ -20,9 +20,15 @@ def schedule():
 		task = tasks.resolve_task(form.task_name.data)
 		job_name = form.job_name.data
 
+		# Make sure job name is not already in use.
+		if controller.get_job_entry_by_name(job_name) is not None:
+			flash("That name is already in use.")
+			return render_template("jobs/schedule.html", form=form)
+
 		params = []
 		for field in str(form["param_metadata"].data).split(";"):
 			params.append(form[field].data)
+
 		try:
 			controller.schedule_job(task, params, job_name)
 		except Exception as e:

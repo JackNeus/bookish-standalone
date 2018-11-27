@@ -87,8 +87,7 @@ def ucsf_api_aggregate_task(query):
 def word_freq_task(file_list_path, keywords):
     if isinstance(keywords, str):
         keywords = shlex.split(keywords)
-
-    init_job([file_list_path[len(config["TASK_RESULT_PATH"]):], " ".join(keywords)])
+    init_job([file_list_path, " ".join(keywords)])
 
     # TODO: Make sure file_list_path is a valid task ID.
     file_list_file = open(config["TASK_RESULT_PATH"] + file_list_path)
