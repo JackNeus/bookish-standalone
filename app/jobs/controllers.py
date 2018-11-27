@@ -5,7 +5,7 @@ from flask import current_app
 from flask_login import current_user
 from redis import Redis
 from rq.job import Job
-from tasks.worker import KillJob
+from tasks.worker import BookishJob
 
 from app.models import JobEntry
 from tasks import tasks
@@ -18,7 +18,7 @@ def get_job_entry(id):
     return job[0]
 
 def get_rq_job(id):
-	job = KillJob.fetch(id, connection = current_app.redis)
+	job = BookishJob.fetch(id, connection = current_app.redis)
 	return job
 
 def get_user_jobs(user_id):

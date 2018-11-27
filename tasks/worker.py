@@ -14,7 +14,7 @@ from tasks.util import *
 
 kill_key = "rq:jobs:kill"
 
-class KillJob(Job):
+class BookishJob(Job):
     def kill(self):
         """ Force kills the current job causing it to fail """
         if self.is_started:
@@ -36,12 +36,12 @@ class KillJob(Job):
 
         return super()._execute()
 
-class KillQueue(rq.Queue):
-    job_class = KillJob
+class BookishQueue(rq.Queue):
+    job_class = BookishJob
 
 class BookishWorker(Worker):
-    queue_class = KillQueue
-    job_class = KillJob
+    queue_class = BookishQueue
+    job_class = BookishJob
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

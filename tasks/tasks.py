@@ -1,7 +1,6 @@
 # This file will contain all possible background jobs that the user can run.
 
 import math
-import multiprocessing
 import os
 import requests
 import shlex
@@ -16,16 +15,16 @@ from tasks.util import *
 
 def resolve_task(task_name):
     if task_name == "ucsf_api_aggregate":
-        return ucsf_api_aggregate
+        return ucsf_api_aggregate_task
     if task_name == "ngram":
-        return word_freq
+        return word_freq_task
     return None
 
 # Get full results for a UCSF IDL API request.
 # Does this by concatenating all 100-item pages.
 # Returns list of document IDs matching the query.
 
-def ucsf_api_aggregate(query):
+def ucsf_api_aggregate_task(query):
     init_job([query])
 
     # CONSTANTS:
@@ -84,8 +83,8 @@ def ucsf_api_aggregate(query):
 
     output_file.close()
 
-# Top level function.
-def word_freq(file_list_path, keywords):
+# Top level task function.
+def word_freq_task(file_list_path, keywords):
     if isinstance(keywords, str):
         keywords = shlex.split(keywords)
 
@@ -106,16 +105,17 @@ def word_freq(file_list_path, keywords):
 
     set_task_size(len(file_list))
     print("Analyzing %d files" % len(file_list))
-    return_from_task(word_freq_helper(file_list, keywords))
+    return_from_task(word_freq(file_list, keywords))
 
-def word_freq_helper(files, keywords):
+# Generic word freq function.
+def word_freq(files, keywords):
     if isinstance(keywords, str):
         keywords = [keywords]
     # Remove duplicates and make all keywords lowercase.
     keywords = [keyword.lower() for keyword in set(keywords)]
     to_process = len(files)
 
-    word_freqs = multiprocessing.Pool(1).starmap(get_word_freq, zip(files, repeat(keywords)))
+    word_freqs = get_pool().starmap(get_word_freq, zip(files, repeat(keywords)))
     # Currrently, discard any files that couldn't be found.
     word_freqs = [x for x in word_freqs if x is not None]
     set_task_metadata("files_analyzed", len(word_freqs))
