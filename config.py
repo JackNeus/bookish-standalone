@@ -6,11 +6,11 @@ load_dotenv(os.path.join(basedir, '.env'))
 
 class Config(object):
 	SECRET_KEY = os.environ.get('SECRET_KEY')
-	DEBUG = True
+	DEBUG = False
 	TEMPLATES_AUTO_RELOAD = True
 	REDIS_QUEUE_NAME = 'bookish-tasks'
 	REDIS_URL = os.environ.get('REDIS_URL') or 'redis://'
-	TASK_RESULT_PATH = 'rq_results/'
+	TASK_RESULT_PATH = os.environ.get('TASK_RESULT_PATH') or 'rq_results/'
 
 	DB_URL = os.environ.get('DB_URL')
 	DB_PORT = int(os.environ.get('DB_PORT'))
@@ -21,3 +21,11 @@ class Config(object):
 	SESSION_LENGTH = 7
 
 	NUM_CORES = 1
+
+class DevConfig(Config):
+	ENV = "development"
+	DEBUG = True
+
+class ProdConfig(Config):
+	ENV = "production"
+	DEBUG = False
