@@ -4,6 +4,7 @@ import math
 import multiprocessing
 import os
 import requests
+import shlex
 import subprocess
 import queue
 from collections import defaultdict
@@ -83,9 +84,10 @@ def ucsf_api_aggregate(query):
 
     output_file.close()
 
+# Top level function.
 def word_freq(file_list_path, keywords):
     if isinstance(keywords, str):
-        keywords = keywords.split()
+        keywords = shlex.split(keywords)
 
     init_job([file_list_path[len(config["TASK_RESULT_PATH"]):], " ".join(keywords)])
 
