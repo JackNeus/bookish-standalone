@@ -1,4 +1,5 @@
 import copy
+from datetime import datetime
 import json
 from mongoengine import register_connection
 import multiprocessing
@@ -40,6 +41,7 @@ def init_job(params = []):
         setattr(job, "db_obj_lock", threading.Lock())
  
         set_task_status('Running')
+        set_task_db_field("time_started", datetime.now())
         set_task_params([str(param) for param in params])
 
         job.meta['processed'] = 0

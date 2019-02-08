@@ -32,13 +32,13 @@
 						{% endif %}
 					</td>
 					<td id="time-started">{{ jobs[i].time_started }}</td>
-					<td></td>
+					<td id="time-finished">{{ jobs[i].time_finished }}</td>
 					<td id="progress">{{ jobs[i].progress }}</td>
 					<td id="description">{{ jobs[i].description }}</td>
 					<td id="action">
 						{% if jobs[i].status in ["Queued", "Running"] %}
 							<a href="jobs/kill/{{jobs[i].id}}">Abort Job</a>
-						{% else %}
+						{% elif jobs[i].status not in ["Aborting"] %}
 							<a href="jobs/delete/{{jobs[i].id}}">Delete Job</a>
 						{% endif %}
 					</td>

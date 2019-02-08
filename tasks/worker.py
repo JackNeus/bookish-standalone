@@ -1,5 +1,6 @@
 from rq import Worker, Queue
 from rq.job import Job
+from datetime import datetime
 import os
 import rq
 import signal
@@ -49,10 +50,12 @@ class BookishWorker(Worker):
         
     def handle_job_success(self, job, queue, started_job_registry):
         set_task_status("Completed", job = job)
+        set_task_db_field("time_finished", datetime.now(), job = job)
         super().handle_job_success(job = job, queue = queue, started_job_registry = started_job_registry)
 
     def handle_job_failure(self, job, started_job_registry=None):
         if get_task_status(job) not in ["Aborting", "Aborted"]:
             set_task_status_bare("Failed", job = job)
+            set_task_db_field("time_finished", datetime.now(), job = job)
         super().handle_job_failure(job = job, started_job_registry = started_job_registry)
 

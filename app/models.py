@@ -14,7 +14,7 @@ class JobEntry(Document):
     user_id = StringField(required = True)
     status = StringField(required = True)
     complete = BooleanField(required = True, default = False)
-    time_started = DateTimeField(required = True, default = datetime.now())
+    time_started = DateTimeField()
     time_finished = DateTimeField()
 
     # Generic metadata dict.
