@@ -71,6 +71,30 @@ def delete(id):
 		flash("Failed to delete job.")
 	return redirect(url_for("jobs.jobs_index"))
 
+@bp.route('jobs/replay/<id>')
+@login_required
+def replay(id):
+	job = controller.get_job_entry(id)
+	if job is None:
+		flash("Job does not exist.")
+
+	task = tasks.resolve_task(job.task)
+	job_name = job.name + " (Replay)"
+
+	# Make sure job name is not already in use.
+	if controller.get_job_entry_by_name(job_name) is not None:
+		flash("That name is already in use.")
+		return redirect(url_for("jobs.jobs_index"))
+	print(task, job.params, job_name)
+	try:
+		controller.schedule_job(task, job.params, job_name)
+	except Exception as e:
+		if current_app.config["DEBUG"]:
+			raise e
+		flash("Something went wrong.")
+		return redirect(url_for("jobs.jobs_index"))
+	return redirect(url_for("jobs.jobs_index"))
+
 @bp.route('jobs/view/<id>')
 @login_required
 def view(id):
