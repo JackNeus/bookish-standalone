@@ -68,8 +68,10 @@ class JobEntry(Document):
             # TODO: This isn't perfect (if you kill everything a job may still appear as "Running"),
             # but it's better than nothing.
             rq_job = self.get_rq_job()
-            if self.status in ["Queued", "Running"] and (rq_job is None or rq_job.get_status() == "failed"):
-                self.status = "Internal Error"
+            if self.status in ["Queued", "Running"] and rq_job is None:
+                self.status = "Internal Error (1)"
+            if self.status in ["Queued", "Running"] and rq_job.get_status() == "failed":
+                self.status = "Internal Error (2)"
 
     def clean(self):
         self.update_status()
