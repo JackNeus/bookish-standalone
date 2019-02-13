@@ -30,7 +30,7 @@ def get_rq_job(id):
     return job
 
 def get_user_jobs(user_id):
-    return JobEntry.objects(user_id = user_id).order_by("time_started", "time_finished")
+    return JobEntry.objects(user_id = user_id).order_by("time_created", "time_started", "time_finished")
 
 def get_user_jobs_json(user_id):
     def job_entry_to_json(job_entry):
@@ -56,7 +56,7 @@ def get_user_jobs_json(user_id):
 # Need to first start script start_worker.py.
 def schedule_job(task, params, name = None):
     # Temporarily made TTL 0 to test DB logging.
-    job = current_app.task_queue.enqueue(task, *params, result_ttl = 0, timeout = -1)
+    job = current_app.task_queue.enqueue(task, *params, result_ttl = 120, timeout = -1)
     job_id = job.get_id()
     job.meta['progress'] = 0.0
     job.save_meta()
@@ -65,6 +65,7 @@ def schedule_job(task, params, name = None):
                          task = task.__name__,
                          name = name, 
                          status = 'Queued',
+                         time_created = datetime.datetime.now(),
                          user_id = current_user.get_id())
     job_entry.save()
 

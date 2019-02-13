@@ -14,7 +14,7 @@ from flask import current_app
 from tasks.util import *
 
 def resolve_task(task_name):
-    if task_name == "ucsf_api_aggregate":
+    if task_name == "ucsf_api_aggregate" or task_name == "ucsf_api_aggregate_task":
         return ucsf_api_aggregate_task
     if task_name == "ngram" or task_name == "word_freq_task":
         return word_freq_task
@@ -44,7 +44,7 @@ def ucsf_api_aggregate_task(query):
     files_found = 0
     set_task_metadata("files_count", total_items)
     set_task_metadata("files_found", files_found)
-
+    print("No error yet.")
     # Calculate number of pages.
     num_pages = math.ceil(total_items * 1.0 / page_size)
     set_task_size(num_pages)
@@ -104,6 +104,7 @@ def word_freq_task(file_list_path, keywords):
 
     set_task_size(len(file_list))
     print("Analyzing %d files" % len(file_list))
+    set_task_metadata("files_analyzed", 0)
     return_from_task(word_freq(file_list, keywords))
 
 # Generic word freq function.
@@ -155,6 +156,7 @@ def get_word_freq(file_data, keywords):
         if word in keywords:
             freqs[word] += 1
     inc_task_processed()
+    push_metadata_to_db("files_analyzed")
     return (fileyear, freqs, len(file))
 
 

@@ -14,6 +14,7 @@ class JobEntry(Document):
     user_id = StringField(required = True)
     status = StringField(required = True)
     complete = BooleanField(required = True, default = False)
+    time_created = DateTimeField()
     time_started = DateTimeField()
     time_finished = DateTimeField()
 
@@ -45,7 +46,10 @@ class JobEntry(Document):
                 seed_task = JobEntry.objects(id=seed_task_id)
                 if len(seed_task) > 0:
                     seed_task_name = seed_task[0].name
-                return "%d files analyzed. (%s, %s)" % (self.task_metadata["files_analyzed"], seed_task_name, self.params[1])
+                description = "%d files analyzed. (%s, %s)" % (self.task_metadata["files_analyzed"], seed_task_name, self.params[1])
+                if self.get_status() != "Completed":
+                    description = "~" + description
+                return description
             return ",".join(self.params)
         except Exception as e:
             return "n/a"
