@@ -16,7 +16,7 @@ from tasks.util import *
 def resolve_task(task_name):
     if task_name == "ucsf_api_aggregate":
         return ucsf_api_aggregate_task
-    if task_name == "ngram":
+    if task_name == "ngram" or task_name == "word_freq_task":
         return word_freq_task
     return None
 
@@ -156,6 +156,7 @@ def get_word_freq(file_data, keywords):
             freqs[word] += 1
     inc_task_processed()
     return (fileyear, freqs, len(file))
+
 
 # This job will probably never be client-facing, as it only needs to be run once.
 def clean(files):
