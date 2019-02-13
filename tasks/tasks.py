@@ -44,7 +44,7 @@ def ucsf_api_aggregate_task(query):
     files_found = 0
     set_task_metadata("files_count", total_items)
     set_task_metadata("files_found", files_found)
-    print("No error yet.")
+    
     # Calculate number of pages.
     num_pages = math.ceil(total_items * 1.0 / page_size)
     set_task_size(num_pages)
