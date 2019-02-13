@@ -125,11 +125,23 @@ def set_task_metadata(k, v, job = None):
         job_entry.save()
         job.db_obj_lock.release()
 
+# If job.meta[rq_metadata_k] % step == 0, 
+# set job_entry.metadata[db_metadata_k] = job.meta[rq_metadata_k].
+def push_metadata_to_db(db_metadata_k, rq_metadata_k = "processed", step = 100):
+    job = get_current_job()
+    if not job:
+        return
+    rq_metadata_v = job.meta[rq_metadata_k]
+    if rq_metadata_v % step == 0:     
+        set_task_metadata(db_metadata_k, rq_metadata_v, job = job)
+
 ### END JOB ENTRY CODE
 
 ### RQ JOB CODE
 
 # TODO: Put this in metadata instead.
+# Actually, it may be worth it to keep it local. 
+# As it is, it's pretty expensive to write many updates to the DB.
 
 def inc_task_processed(amt = 1):
     job = get_current_job()
