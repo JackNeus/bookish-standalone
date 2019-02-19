@@ -8,19 +8,21 @@ import subprocess
 import queue
 from collections import defaultdict
 from itertools import repeat
-from nltk.corpus import stopwords
 from rq import get_current_job
 from flask import current_app
 
 from tasks.util import *
+
+nltk.download("stopwords")
+stopwords = set(nltk.corpus.stopwords.words('english'))
 
 def resolve_task(task_name):
     if task_name == "ucsf_api_aggregate" or task_name == "ucsf_api_aggregate_task":
         return ucsf_api_aggregate_task
     if task_name == "ngram" or task_name == "word_freq_task":
         return word_freq_task
-    if task_name == "top_bigrams":
-        return get_top_bigrams_task
+    if task_name == "top_bigrams" or task_name == "top_bigrams_task":
+        return top_bigrams_task
     return None
 
 # Get full results for a UCSF IDL API request.
@@ -162,7 +164,7 @@ def get_word_freq(file_data, keywords):
     push_metadata_to_db("files_analyzed")
     return (fileyear, freqs, len(file))
 
-def get_top_bigrams_task(file_list_path):
+def top_bigrams_task(file_list_path):
     init_job([file_list_path])
 
     # TODO: Make sure file_list_path is a valid task ID.
@@ -184,11 +186,10 @@ def get_top_bigrams_task(file_list_path):
 
 def get_top_bigrams(files):
     to_process = len(files)
-
     bigram_freqs = get_pool().starmap(get_bigrams, files)
     # Currently, discard any files that couldn't be found.
-    bigram_freqs = [x for x in word_freqs if x is not None]
-    set_task_metadata("files_analyzed", len(word_freqs))
+    bigram_freqs = [x for x in bigram_freqs if x is not None]
+    set_task_metadata("files_analyzed", len(bigram_freqs))
 
     # Merge dictionaries.
     years = [x[1] for x in files]
@@ -196,19 +197,22 @@ def get_top_bigrams(files):
     max_year = int(max(years))
     years = range(min_year, max_year+1)
 
-    global_freqs = init_dict(years, defaultdict(lambda x: 0, {}))
-
-    for year, freqs in bigram_freqs:
-        for bigram, freq in freqs:
+    global_freqs = init_dict(years, defaultdict(lambda: 0, {}))
+    total_bigram_counts = init_dict(years, 0)
+    for year, freqs, file_size in bigram_freqs:
+        total_bigram_counts[year] += file_size ** 2
+        for bigram, freq in freqs.items():
             global_freqs[year][bigram] += freq
-    global_freqs = {k:v for (k,v) in d.items() if v >= 20}
-
+    for year in global_freqs.keys():
+        # Only return bigrams that make up more than .5% of all bigrams for that year.
+        #freq_threshold = 0.005 * total_bigram_counts[year]
+        freq_threshold = 25
+        global_freqs[year] = {";".join(k):v for (k,v) in global_freqs[year].items() if v >= freq_threshold}
+    
     return global_freqs
 
 
-def get_bigrams(file_data):
-    filename, fileyear = file_data
-
+def get_bigrams(filename, fileyear):
     try:
         file = open(filename, "r")
     except FileNotFoundError as e:
@@ -216,17 +220,18 @@ def get_bigrams(file_data):
     
     file = list(map(lambda x: x.strip(), file.readlines()))
     bigrams = defaultdict(lambda: 0, {})
-    stop_words = set(stopwords.words('english'))
     for i in range(len(file) - 1):
-        if file[i+1] in stop_words:
+        if file[i+1] in stopwords:
             i += 1
             continue
-        if file[i] in stop_words:
+        if file[i] in stopwords:
             continue
         bigram = tuple(sorted((file[i], file[i+1])))
         bigrams[bigram] += 1
 
-    return (fileyear, bigrams)
+    inc_task_processed()
+    push_metadata_to_db("files_analyzed")
+    return (fileyear, dict(bigrams), len(file))
 
 
 

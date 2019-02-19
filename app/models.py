@@ -40,14 +40,21 @@ class JobEntry(Document):
             if self.task == "ucsf_api_aggregate_task":
                 return "%d/%d files found. (%s)" % (self.task_metadata["files_found"], 
                     self.task_metadata["files_count"], ",".join(self.params))
-            if self.task == "word_freq_task":
+            if self.task in ["word_freq_task", "top_bigrams_task"]:
                 seed_task_id = self.params[0]
                 seed_task_name = "n/a"
                 seed_task = JobEntry.objects(id=seed_task_id)
                 if len(seed_task) > 0:
                     seed_task_name = seed_task[0].name
-                description = "%d files analyzed. (%s, %s)" % (self.task_metadata["files_analyzed"], seed_task_name, self.params[1])
-                if self.get_status() != "Completed":
+
+                param_list = ""
+                if self.task == "word_freq_task":
+                    param_list = "(%s, %s)" % (seed_task_name, self.params[1])
+                if self.task == "top_bigrams_task":
+                    param_list = "(%s)" % seed_task_name
+
+                description = "%d files analyzed. %s" % (self.task_metadata["files_analyzed"], param_list)
+                if self.status != "Completed":
                     description = "~" + description
                 return description
             return ",".join(self.params)
