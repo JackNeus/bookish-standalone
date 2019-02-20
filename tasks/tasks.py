@@ -93,19 +93,7 @@ def word_freq_task(file_list_path, keywords):
     if isinstance(keywords, str):
         keywords = shlex.split(keywords)
     init_job([file_list_path, " ".join(keywords)])
-
-    # TODO: Make sure file_list_path is a valid task ID.
-    file_list_file = open(config["TASK_RESULT_PATH"] + file_list_path)
-    def extract(line):
-        line = line.split(" ")
-        line[0] += ".clean"
-        if len(line) > 1:
-            line[1] = int(line[1][:-1])
-        return tuple(line)
-
-    file_list = map(lambda line: extract(line), file_list_file.readlines())
-    # Remove files without years.
-    file_list = list(filter(lambda x: len(x) > 1, file_list))
+    file_list = get_file_list(file_list_path)
 
     set_task_size(len(file_list))
     print("Analyzing %d files" % len(file_list))
@@ -166,19 +154,7 @@ def get_word_freq(file_data, keywords):
 
 def top_bigrams_task(file_list_path):
     init_job([file_list_path])
-
-    # TODO: Make sure file_list_path is a valid task ID.
-    file_list_file = open(config["TASK_RESULT_PATH"] + file_list_path)
-    def extract(line):
-        line = line.split(" ")
-        line[0] += ".clean"
-        if len(line) > 1:
-            line[1] = int(line[1][:-1])
-        return tuple(line)
-
-    file_list = map(lambda line: extract(line), file_list_file.readlines())
-    # Remove files without years.
-    file_list = list(filter(lambda x: len(x) > 1, file_list))
+    file_list = get_file_list(file_list_path)
 
     set_task_size(len(file_list))
     set_task_metadata("files_analyzed", 0)
