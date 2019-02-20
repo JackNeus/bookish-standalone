@@ -59,6 +59,30 @@ def init_slave():
 def get_pool():
     return multiprocessing.Pool(config["NUM_CORES"], initializer = init_slave)
 
+# Get the file list for the rq result associated with file_list_path.
+# If include_without_year is True, return files regardless of whether or not they are
+# associated with a year.
+def get_file_list(file_list_path, include_without_year = False):
+    # Make sure file_list_path is a valid task ID.
+    if file_list_path not in ["dummy"] and get_job_entry(file_list_path) is None:
+        return None
+
+    file_list_file = open(config["TASK_RESULT_PATH"] + file_list_path)
+    def extract(line):
+        line = line.split(" ")
+        line[0] += ".clean"
+        if len(line) > 1:
+            line[1] = int(line[1][:-1])
+        return tuple(line)
+
+    file_list = map(lambda line: extract(line), file_list_file.readlines())
+    
+    if not include_without_year:
+        # Remove files without years.
+        file_list = list(filter(lambda x: len(x) > 1, file_list))
+
+    return file_list
+
 ### JOB ENTRY CODE
 
 def get_job_entry(id):

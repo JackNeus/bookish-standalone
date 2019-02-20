@@ -6,11 +6,13 @@ var max_parameters = 2;
 var all_fields = ["param1", "seed_task", "param2"];
 var task_fields = {
 	"ucsf_api_aggregate": ["param1"],
-	"ngram": ["seed_task", "param2"]
+	"ngram": ["seed_task", "param2"],
+	"top_bigrams": ["seed_task"],
 };
 var parameter_names = {
 	"ucsf_api_aggregate": ["Query"],
-	"ngram": ["Input Task", "Keywords (space separated)"]
+	"ngram": ["Input Task", "Keywords (space separated)"],
+	"top_bigrams": ["Input Task"],
 };
 
 var render_paramters = function(obj) {
