@@ -38,6 +38,8 @@ def init_job(params = []):
 
         job.is_master = True        
         init_db_connection()
+        # TODO: In the future, if multiple jobs can run at once
+        # this has to be a global lock.
         setattr(job, "db_obj_lock", threading.Lock())
  
         set_task_status('Running')
@@ -50,14 +52,16 @@ def init_job(params = []):
     else:
         print("Job DNE.")
 
-def init_slave():
-    job = get_current_job()
+def init_slave(job = None):
+    # TODO: What if job is none?
+    if not job:
+        job = get_current_job()
     job.is_master = False
     # Need to reregister DB connection.
     init_db_connection()
 
 def get_pool():
-    return multiprocessing.Pool(config["NUM_CORES"], initializer = init_slave)
+    return multiprocessing.Pool(config["NUM_CORES"], initializer = init_slave, initargs = [get_current_job()])
 
 # Get the file list for the rq result associated with file_list_path.
 # If include_without_year is True, return files regardless of whether or not they are
