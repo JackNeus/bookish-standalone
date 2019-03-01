@@ -8,6 +8,7 @@ from rq import get_current_job
 from queue import Queue
 
 from app.models import JobEntry
+from tasks.multi_util import *
 
 config = None
 def set_config(config_):
@@ -58,6 +59,17 @@ def init_slave():
 
 def get_pool():
     return multiprocessing.Pool(config["NUM_CORES"], initializer = init_slave)
+
+def partition_map(map_func, items, size_func = lambda *a: 1, max_partition_size = 25):
+    items = [item + (size_func(item),) for item in items]
+    partitions = partition(items, max_partition_size)
+    mapped_values = get_pool().starmap(map_func, partitions)
+    return mapped_values
+
+    # Calculate max_partition_size in bytes.
+    #bytes_per_gb = 1024 * 1024 * 1024
+    #usable_memory = 1 * bytes_per_gb
+    #max_partition_size = usable_memory / config["NUM_CORES"]
 
 # Get the file list for the rq result associated with file_list_path.
 # If include_without_year is True, return files regardless of whether or not they are
@@ -221,26 +233,3 @@ def return_from_task(return_value):
     write_task_results(return_value)
 
 ### END TASK OUTPUT FILE CODE
-
-class InvalidArgumentError(Exception):
-	pass
-
-# Params
-# process_func: task function to be called. function should pop elements from input_queue
-# func_input: list of elements to be added to a queue
-# kwargs: parameters for process_func
-# num_threads: number of threads to be spawned
-def multi_work(process_func, func_input, kwargs = {}, num_threads = 1):
-	if "input_queue" in kwargs:
-		raise InvalidArgumentError("\"input_queue\" is a reserved parameter name.")
-
-	input_queue = Queue()
-	for elt in func_input:
-		input_queue.put(elt)
-	for i in range(num_threads):
-		t = threading.Thread(target = process_func, kwargs = {"input_queue": input_queue, **kwargs})
-		t.daemon = True
-		t.start()
-	input_queue.join()
-    # TODO: join with exception 
-
