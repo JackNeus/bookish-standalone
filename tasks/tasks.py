@@ -196,7 +196,6 @@ def get_bigrams(files, year):
     file_length = 0
 
     for filename in files:
-
         try:
             file = open(filename, "r")
         except FileNotFoundError as e:
