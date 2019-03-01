@@ -162,7 +162,7 @@ def top_bigrams_task(file_list_path):
 
 def get_top_bigrams(files):
     to_process = len(files)
-    bigram_freqs = get_pool().starmap(get_bigrams, files)
+    bigram_freqs = partition_map(get_bigrams, [x[::-1] for x in files])
     # Currently, discard any files that couldn't be found.
     bigram_freqs = [x for x in bigram_freqs if x is not None]
     set_task_metadata("files_analyzed", len(bigram_freqs))
@@ -187,49 +187,31 @@ def get_top_bigrams(files):
     
     return global_freqs
 
+def get_bigrams(files, year):
+    # Still works with singletons.
+    if not isinstance(files, list):
+        files = [files]
 
-def get_bigrams(filename, fileyear):
-    try:
-        file = open(filename, "r")
-    except FileNotFoundError as e:
-        return None
-    
-    file = list(map(lambda x: x.strip(), file.readlines()))
     bigrams = defaultdict(lambda: 0, {})
-    for i in range(len(file) - 1):
-        if file[i+1] in stopwords:
-            i += 1
+    file_length = 0
+
+    for filename in files:
+        try:
+            file = open(filename, "r")
+        except FileNotFoundError as e:
             continue
-        if file[i] in stopwords:
-            continue
-        bigram = tuple(sorted((file[i], file[i+1])))
-        bigrams[bigram] += 1
+        
+        file = list(map(lambda x: x.strip(), file.readlines()))
+        for i in range(len(file) - 1):
+            if file[i+1] in stopwords:
+                i += 1
+                continue
+            if file[i] in stopwords:
+                continue
+            bigram = tuple(sorted((file[i], file[i+1])))
+            bigrams[bigram] += 1
+        file_length += len(files)
 
-    inc_task_processed()
-    push_metadata_to_db("files_analyzed")
-    return (fileyear, dict(bigrams), len(file))
-
-
-
-# This job will probably never be client-facing, as it only needs to be run once.
-def clean(files):
-    def job_body(input_queue):
-        print("Entered.")
-        while not input_queue.empty():
-            file_path = input_queue.get()
-            subprocess.check_output(['./jobs/clean.sh', file_path])
-            input_queue.task_done()
-    util.multi_work(job_body, files, num_threads = 3)
-
-'''
-# Temporary. Comment this out before running the actual app.
-txt = []
-i = 0
-for subdir, dirs, files in os.walk("../txt/ucsf/"):
-    for file in files:
-        txt.append((subdir + "/" + file, 1900 + i % 10))
-        i += 1
-print(txt[:10])
-print(get_top_bigrams(txt))
-print("Done.")
-'''
+        inc_task_processed()
+        push_metadata_to_db("files_analyzed")
+    return (year, dict(bigrams), file_length)
