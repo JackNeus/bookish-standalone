@@ -3,7 +3,6 @@ from datetime import datetime
 import json
 from mongoengine import register_connection
 import multiprocessing
-import threading
 from rq import get_current_job
 from queue import Queue
 
@@ -31,6 +30,12 @@ def init_dict(keys, default_value):
         new_dict[k] = copy.deepcopy(default_value)
     return new_dict
 
+def make_locks_global(rq_lock, db_lock):
+    global rq_obj_lock
+    global db_obj_lock
+    rq_obj_lock = rq_lock
+    db_obj_lock = db_lock
+
 def init_job(params = []):
     # RQ setup.
     job = get_current_job()
@@ -39,7 +44,7 @@ def init_job(params = []):
 
         job.is_master = True        
         init_db_connection()
-        setattr(job, "db_obj_lock", threading.Lock())
+        make_locks_global(multiprocessing.Lock(), multiprocessing.Lock())
  
         set_task_status('Running')
         set_task_db_field("time_started", datetime.now())
@@ -51,14 +56,20 @@ def init_job(params = []):
     else:
         print("Job DNE.")
 
-def init_slave():
+def init_slave(rq_lock, db_lock):
+    make_locks_global(rq_lock, db_lock)
+
     job = get_current_job()
     job.is_master = False
     # Need to reregister DB connection.
     init_db_connection()
 
 def get_pool():
-    return multiprocessing.Pool(config["NUM_CORES"], initializer = init_slave)
+    job = get_current_job()
+    if job is None:
+        return None
+    lock_args = (rq_obj_lock, db_obj_lock)
+    return multiprocessing.Pool(config["NUM_CORES"], initializer = init_slave, initargs=lock_args)
 
 def partition_map(map_func, items, size_func = lambda *a: 1, max_partition_size = 25):
     items = [item + (size_func(item),) for item in items]
@@ -123,10 +134,10 @@ def set_task_db_field(k, v, job = None, job_id = None):
         job_entry = get_job_entry(job_id)
 
         # Make sure DB write is thread-safe.
-        job.db_obj_lock.acquire(blocking=False)
+        db_obj_lock.acquire()
         setattr(job_entry, k, v)
         job_entry.save()
-        job.db_obj_lock.release()
+        db_obj_lock.release()
     else:
         # TODO: Raise exception
         pass   
@@ -156,19 +167,22 @@ def set_task_metadata(k, v, job = None):
         job_entry = get_job_entry(job_id)
 
         # Make sure DB write is thread-safe.
-        job.db_obj_lock.acquire(blocking=False)
+        db_obj_lock.acquire()
         job_entry.task_metadata[k] = v
         job_entry.save()
-        job.db_obj_lock.release()
+        db_obj_lock.release()
 
-# If job.meta[rq_metadata_k] % step == 0, 
+# If job.meta[rq_metadata_k] % step == 0 (or forced),
 # set job_entry.metadata[db_metadata_k] = job.meta[rq_metadata_k].
-def push_metadata_to_db(db_metadata_k, rq_metadata_k = "processed", step = 100):
+def push_metadata_to_db(db_metadata_k, rq_metadata_k = "processed", step = 100, force = False):
     job = get_current_job()
     if not job:
         return
+    rq_obj_lock.acquire()
+    job.refresh()
     rq_metadata_v = job.meta[rq_metadata_k]
-    if rq_metadata_v % step == 0:     
+    rq_obj_lock.release()
+    if rq_metadata_v % step == 0 or force:     
         set_task_metadata(db_metadata_k, rq_metadata_v, job = job)
 
 ### END JOB ENTRY CODE
@@ -182,14 +196,19 @@ def push_metadata_to_db(db_metadata_k, rq_metadata_k = "processed", step = 100):
 def inc_task_processed(amt = 1):
     job = get_current_job()
     if job:
+        rq_obj_lock.acquire() # locks don't work. TODO
+        job.refresh()
         job.meta['processed'] += amt
         job.save_meta()
+        rq_obj_lock.release()
 
 def set_task_size(size):
     job = get_current_job()
     if job:
+        rq_obj_lock.acquire()
         job.meta['size'] = size
         job.save_meta()
+        rq_obj_lock.release()
 
 ### END RQ JOB CODE
 
