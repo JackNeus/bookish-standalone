@@ -22,7 +22,7 @@ class DevConfig(object):
 
 	SESSION_LENGTH = 7
 
-	NUM_CORES = 1
+	NUM_CORES = 2
 
 class ProdConfig(object):
 	DEBUG = False

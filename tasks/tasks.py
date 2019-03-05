@@ -106,7 +106,6 @@ def word_freq(files, keywords):
         keywords = [keywords]
     # Remove duplicates and make all keywords lowercase.
     keywords = [keyword.lower() for keyword in set(keywords)]
-    to_process = len(files)
 
     word_freqs = get_pool().starmap(get_word_freq, zip(files, repeat(keywords)))
     # Currrently, discard any files that couldn't be found.
@@ -161,11 +160,10 @@ def top_bigrams_task(file_list_path):
     return_from_task(get_top_bigrams(file_list))
 
 def get_top_bigrams(files):
-    to_process = len(files)
     bigram_freqs = partition_map(get_bigrams, [x[::-1] for x in files])
     # Currently, discard any files that couldn't be found.
     bigram_freqs = [x for x in bigram_freqs if x is not None]
-    set_task_metadata("files_analyzed", len(bigram_freqs))
+    push_metadata_to_db("files_analyzed", force = True)
 
     # Merge dictionaries.
     years = [x[1] for x in files]
