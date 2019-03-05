@@ -196,7 +196,7 @@ def push_metadata_to_db(db_metadata_k, rq_metadata_k = "processed", step = 100, 
 def inc_task_processed(amt = 1):
     job = get_current_job()
     if job:
-        rq_obj_lock.acquire() # locks don't work. TODO
+        rq_obj_lock.acquire()
         job.refresh()
         job.meta['processed'] += amt
         job.save_meta()
