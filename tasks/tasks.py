@@ -180,9 +180,10 @@ def get_top_bigrams(files):
     for year in global_freqs.keys():
         # Only return bigrams that make up more than .5% of all bigrams for that year.
         #freq_threshold = 0.005 * total_bigram_counts[year]
-        freq_threshold = 25
-        global_freqs[year] = {";".join(k):v for (k,v) in global_freqs[year].items() if v >= freq_threshold}
-    
+        #freq_threshold = 25
+        #global_freqs[year] = {";".join(k):v for (k,v) in global_freqs[year].items() if v >= freq_threshold}
+        global_freqs[year] = n_highest_entries(global_freqs[year], 50)
+
     return global_freqs
 
 def get_bigrams(files, year):
@@ -199,6 +200,7 @@ def get_bigrams(files, year):
         except FileNotFoundError as e:
             continue
         
+        file_bigrams = defaultdict(lambda: 0)
         file = list(map(lambda x: x.strip(), file.readlines()))
         for i in range(len(file) - 1):
             if file[i+1] in stopwords:
@@ -206,8 +208,15 @@ def get_bigrams(files, year):
                 continue
             if file[i] in stopwords:
                 continue
-            bigram = tuple(sorted((file[i], file[i+1])))
-            bigrams[bigram] += 1
+            bigram = tuple((file[i], file[i+1]))
+            file_bigrams[bigram] += 1
+
+        # Only take the top 50 bigrams for an individual file.
+        file_bigrams = n_highest_entries(file_bigrams, 50)
+        # Merge dictionaries.
+        for key, value in file_bigrams:
+            bigrams[key] += value
+
         file_length += len(files)
 
         inc_task_processed()

@@ -71,7 +71,7 @@ def get_pool():
     lock_args = (rq_obj_lock, db_obj_lock)
     return multiprocessing.Pool(config["NUM_CORES"], initializer = init_slave, initargs=lock_args)
 
-def partition_map(map_func, items, size_func = lambda *a: 1, max_partition_size = 25):
+def partition_map(map_func, items, size_func = lambda *a: 1, max_partition_size = 100):
     items = [item + (size_func(item),) for item in items]
     partitions = partition(items, max_partition_size)
     mapped_values = get_pool().starmap(map_func, partitions)
@@ -252,3 +252,10 @@ def return_from_task(return_value):
     write_task_results(return_value)
 
 ### END TASK OUTPUT FILE CODE
+
+def n_highest_entries(d, n):
+    if isinstance(d, dict):
+        d = d.items()
+    elif not isinstance(d, list):
+        return None
+    return sorted(d, key = lambda x: x[1], reverse = True)[:n]
