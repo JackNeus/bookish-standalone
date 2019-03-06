@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+	<div class="row justify-content-center">
+		<span id="selected-year">Year: </span>
+		<div id="year-slider"></div>
+		<svg width="960" height="600"></svg>
+		<div class="monospace">{{data}}</div>
+	</div>
+{% endblock %}
+
+{% block scripts %}
+	{{super()}}	
+	<script type="text/javascript">
+		var task_results = JSON.parse({{data | tojson }});
+	</script>
+  <script type="text/javascript" src="/static/js/bigram_viewer.js"></script>		
+{% endblock %}
