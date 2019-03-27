@@ -8,11 +8,13 @@ var task_fields = {
 	"ucsf_api_aggregate": ["param1"],
 	"ngram": ["seed_task", "param2"],
 	"top_bigrams": ["seed_task"],
+	"word_families": ["seed_task", "param2"]
 };
 var parameter_names = {
 	"ucsf_api_aggregate": ["Query"],
 	"ngram": ["Input Task", "Keywords (space separated)"],
 	"top_bigrams": ["Input Task"],
+	"word_families": ["Input Task", "Word Families"]
 };
 
 var render_paramters = function(obj) {

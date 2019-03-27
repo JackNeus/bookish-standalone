@@ -5,9 +5,13 @@ from mongoengine import register_connection
 import multiprocessing
 from rq import get_current_job
 from queue import Queue
+import os
 
-from app.models import JobEntry
-from tasks.multi_util import *
+# Conditional imports so task helper functions can be run outside
+# of the application context.
+if os.environ.get("in_bookish"):
+    from app.models import JobEntry
+    from tasks.multi_util import *
 
 config = None
 def set_config(config_):
@@ -229,6 +233,15 @@ def open_task_output_file():
 # 11/26/18: Introduced new parameter file_obj.
 # If None, the function opens a file, writes to it, and closes the file.
 # If not None, the function will write to the file, but will not open or close it.
+def dump_task_results(data):
+    if isinstance(data, list):
+        for row in data:
+            return dump_task_results(row) + '\n'
+    elif isinstance(data, dict):
+        return json.dumps(data)
+    else:
+        return str(data) + '\n'
+
 def write_task_results(data, file_obj = None):
     if file_obj is None:
         f = open_task_output_file()
@@ -237,14 +250,8 @@ def write_task_results(data, file_obj = None):
     else:
         f = file_obj
 
-    if isinstance(data, list):
-        for row in data:
-            f.write(str(row) + '\n')
-    elif isinstance(data, dict):
-        f.write(json.dumps(data))
-    else:
-        f.write(str(data) + '\n')
-   
+    f.write(dump_task_results(data))
+
     if file_obj is None:
         f.close()
 

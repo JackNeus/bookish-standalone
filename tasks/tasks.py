@@ -1,7 +1,7 @@
 # This file will contain all possible background jobs that the user can run.
-import nltk
 import math
 import os
+import copy
 import requests
 import shlex
 import subprocess
@@ -11,10 +11,14 @@ from itertools import repeat
 from rq import get_current_job
 from flask import current_app
 
-#from tasks.util import *
-
-nltk.download("stopwords")
-stopwords = set(nltk.corpus.stopwords.words('english'))
+# Conditional imports so task helper functions can be run outside
+# of the application context.
+if os.environ.get("in_bookish"):
+    from tasks.util import *
+    from tasks.stopwords import stopwords
+else:
+    from util import init_dict
+    from stopwords import stopwords
 
 def resolve_task(task_name):
     if task_name == "ucsf_api_aggregate" or task_name == "ucsf_api_aggregate_task":
@@ -23,6 +27,8 @@ def resolve_task(task_name):
         return word_freq_task
     if task_name == "top_bigrams" or task_name == "top_bigrams_task":
         return top_bigrams_task
+    if task_name == "" or task_name == "word_family_graph_task":
+        return word_family_graph_task
     return None
 
 # Get full results for a UCSF IDL API request.
@@ -223,53 +229,31 @@ def get_bigrams(files, year):
         push_metadata_to_db("files_analyzed")
     return (year, dict(bigrams), file_length)
 
-# TODO: delete
-def get_file_list(file_list_path, include_without_year = False):
-    file_list_file = open("rq_results/" + file_list_path)
-    def extract(line):
-        line = line.split(" ")
-        line[0] += ".clean"
-        if len(line) > 1:
-            line[1] = int(line[1][:-1])
-        return tuple(line)
-
-    file_list = map(lambda line: extract(line), file_list_file.readlines())
-    
-    if not include_without_year:
-        # Remove files without years.
-        file_list = list(filter(lambda x: len(x) > 1, file_list))
-
-    return file_list
-
-# TODO: delete
-import copy
-def init_dict(keys, default_value):
-    new_dict = {}
-    for k in keys:
-        new_dict[k] = copy.deepcopy(default_value)
-    return new_dict
-
 def word_family_graph_task(file_list_path, word_families):
-    #init_job([file_list_path, word_families])
+    #if isinstance(keywords, str):
+    #    keywords = shlex.split(keywords)
+    init_job([file_list_path, word_families])
     file_list = get_file_list(file_list_path)
 
-    #set_task_size(len(file_list))
-    #set_task_metadata("files_analyzed", 0)
-    return get_word_family_graph(file_list, word_families)
-    #return_from_task(get_word_family_graph(file_list))
+    set_task_size(len(file_list))
+    set_task_metadata("files_analyzed", 0)
+    return_from_task(get_word_family_graph(file_list, word_families))
 
-def get_word_family_graph(file_list, word_families):
+def get_word_family_graph(file_list, word_families, in_app = True):
     keywords = []
     for family in word_families.values():
         keywords = keywords + family
-        # TODO: deal with stopwords
+    # Remove stopwords.
+    keywords = filter(lambda x: x not in stopwords, keywords)
     # Remove duplicates.
     keywords = list(set(keywords))
     print(keywords)
     file_list = file_list[:10]
-    #word_freqs = get_pool().starmap(get_word_family_data, zip(file_list, repeat(keywords)))
-    word_family_data = list(map(lambda x: get_word_family_data(x, keywords), file_list))
-    print(len(file_list), len(word_family_data))    
+
+    if in_app:
+        word_family_data = get_pool().starmap(get_word_family_data, zip(file_list, repeat(keywords)))
+    else:
+        word_family_data = list(map(lambda x: get_word_family_data(x, keywords, in_app), file_list))
 
     # Merge dictionaries.
     years = [x[1] for x in file_list]
@@ -317,7 +301,7 @@ def get_word_family_graph(file_list, word_families):
 
     return (fcms, word_freqs)
 
-def get_word_family_data(file_data, keywords):
+def get_word_family_data(file_data, keywords, in_app = True):
     filename, fileyear = file_data
     # TODO: Determine behavior when a file can't be found.
     try:
@@ -353,6 +337,7 @@ def get_word_family_data(file_data, keywords):
                 if file[i] != file[j]:
                     fcm[file[j]][file[i]] += weights[abs(i - j)]
 
-    #inc_task_processed()
-    #push_metadata_to_db("files_analyzed")
+    if in_app:
+        inc_task_processed()
+        push_metadata_to_db("files_analyzed")
     return (fileyear, fcm, word_freq)
