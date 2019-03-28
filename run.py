@@ -17,6 +17,6 @@ if __name__== "__main__":
 	mode = "dev"
 	if len(sys.argv) > 1:
 		mode = sys.argv[1]
-	os.environ["in_bookish"] = True
+	os.environ["in_bookish"] = "true"
 	app = build_app(mode)
 	app.run(threaded=True)

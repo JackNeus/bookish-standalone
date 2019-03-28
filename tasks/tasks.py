@@ -27,7 +27,7 @@ def resolve_task(task_name):
         return word_freq_task
     if task_name == "top_bigrams" or task_name == "top_bigrams_task":
         return top_bigrams_task
-    if task_name == "" or task_name == "word_family_graph_task":
+    if task_name == "word_families" or task_name == "word_family_graph_task":
         return word_family_graph_task
     return None
 
@@ -230,9 +230,10 @@ def get_bigrams(files, year):
     return (year, dict(bigrams), file_length)
 
 def word_family_graph_task(file_list_path, word_families):
-    #if isinstance(keywords, str):
-    #    keywords = shlex.split(keywords)
     init_job([file_list_path, word_families])
+    if isinstance(word_families, str):
+        word_families = word_families.split(";")
+        word_families = [x.split(",") for x in word_families]
     file_list = get_file_list(file_list_path)
 
     set_task_size(len(file_list))
@@ -241,15 +242,15 @@ def word_family_graph_task(file_list_path, word_families):
 
 def get_word_family_graph(file_list, word_families, in_app = True):
     keywords = []
-    for family in word_families.values():
+    if isinstance(word_families, dict):
+        word_families = word_families.values()
+    for family in word_families:
         keywords = keywords + family
     # Remove stopwords.
     keywords = filter(lambda x: x not in stopwords, keywords)
     # Remove duplicates.
     keywords = list(set(keywords))
-    print(keywords)
-    file_list = file_list[:10]
-
+    
     if in_app:
         word_family_data = get_pool().starmap(get_word_family_data, zip(file_list, repeat(keywords)))
     else:
@@ -280,10 +281,11 @@ def get_word_family_graph(file_list, word_families, in_app = True):
     word_freqs = dict(word_freqs)
 
     # Normalize word freq table to [0, 1].
-    min_freq = min(word_freqs.values())
-    max_freq = max(word_freqs.values())
-    for word, freq in word_freqs.items():
-        word_freqs[word] = (freq - min_freq) / (max_freq - min_freq)
+    if len(word_freqs) > 0:
+        min_freq = min(word_freqs.values())
+        max_freq = max(word_freqs.values())
+        for word, freq in word_freqs.items():
+            word_freqs[word] = (freq - min_freq) / (max_freq - min_freq)
 
     # Adjust weights in fcms
     for year in fcms:
@@ -299,7 +301,7 @@ def get_word_family_graph(file_list, word_families, in_app = True):
                 for word, val in fcms[year][keyword].items():
                     fcms[year][keyword][word] = val / max_edge_val
 
-    return (fcms, word_freqs)
+    return [fcms, word_freqs]
 
 def get_word_family_data(file_data, keywords, in_app = True):
     filename, fileyear = file_data

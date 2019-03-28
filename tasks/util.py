@@ -235,8 +235,10 @@ def open_task_output_file():
 # If not None, the function will write to the file, but will not open or close it.
 def dump_task_results(data):
     if isinstance(data, list):
+        result = ""
         for row in data:
-            return dump_task_results(row) + '\n'
+             result += dump_task_results(row) + '\n'
+        return result
     elif isinstance(data, dict):
         return json.dumps(data)
     else:

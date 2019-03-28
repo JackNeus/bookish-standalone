@@ -1,3 +1,6 @@
+import os
+os.environ["in_bookish"] = "true"
+
 # Custom RQ worker.
 from config import DevConfig, ProdConfig
 from tasks.util import init_db_connection, set_config
