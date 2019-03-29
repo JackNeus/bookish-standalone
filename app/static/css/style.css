@@ -48,7 +48,7 @@ body {
 
 .links line {
   stroke: #999;
-  stroke-opacity: 0.6;
+  stroke-opacity: 0.8;
 }
 
 .nodes circle {
