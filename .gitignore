@@ -10,3 +10,4 @@ job_results/
 dummy
 *.css.map
 *.css
+*d3v4.js*
