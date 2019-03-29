@@ -49,14 +49,26 @@ var render_chart = function(graph) {
 
   const node = g.append("g")
       .attr("class", "nodes")
-      .attr("stroke", "#fff")
-      .attr("stroke-width", 1.5)
     .selectAll("circle")
     .data(graph.nodes)
-    .enter().append("circle")
-      .attr("r", function(d) { return radius * (1 + d["value"]); })
-      .attr("fill", color)
-      .call(drag(simulation))
+    .enter().append("g")
+      .attr("class", "node")
+      .on("click", select_node)
+      .append("circle")
+        .attr("r", function(d) { return radius * (1 + d["value"]); })
+        .attr("fill", color)
+        .call(drag(simulation))
+
+  // TODO: https://stackoverflow.com/questions/11857615/placing-labels-at-the-center-of-nodes-in-d3-js
+
+  function select_node(d, i, gs) {
+    var is_selected = $(gs[i]).hasClass("selected");
+    $(gs).removeClass("selected");
+    if (!is_selected)
+      $(gs[i]).addClass("selected");
+    else
+      $(gs[i]).removeClass("selected");
+  }
 
   var text = g.append("g")
       .attr("class", "labels")
@@ -94,7 +106,8 @@ var render_chart = function(graph) {
   var zoom_handler = d3.zoom()
       .on("zoom", zoom_actions);
 
-  zoom_handler(svg);    
+  zoom_handler(svg);  
+  svg.on("dblclick.zoom", null)  
 
   // Zoom functions 
   function zoom_actions(){
@@ -152,7 +165,7 @@ var convert_data = function(year) {
 
 //render_chart(convert_data(1905));
 render_chart(task_results);
-
+/*
 var min_year = 3000;
 var max_year = 0;
 Object.keys(task_results).forEach(function(year) {
@@ -177,3 +190,4 @@ function update_graph(year) {
   render_chart(convert_data(year));
 }
 update_graph($("#year-slider").slider("values")[0]);
+*/

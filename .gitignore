@@ -8,3 +8,5 @@ __pycache__/*
 rq_results/
 job_results/
 dummy
+*.css.map
+*.css
