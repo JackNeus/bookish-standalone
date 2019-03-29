@@ -31,6 +31,9 @@ var simulation = d3.forceSimulation()
     .force("y", d3.forceY());
 
 var render_chart = function(graph) {
+  // Clear svg.
+  d3.selectAll("svg > *").remove();
+
   // Encompassing group for zoom.
   var g = svg.append("g")
     .attr("class", "everything");
@@ -149,3 +152,28 @@ var convert_data = function(year) {
 
 //render_chart(convert_data(1905));
 render_chart(task_results);
+
+var min_year = 3000;
+var max_year = 0;
+Object.keys(task_results).forEach(function(year) {
+  year = parseInt(year);
+  if (year > max_year)
+    max_year = year;
+  if (year < min_year)
+    min_year = year;
+});
+
+$("#year-slider").slider({
+  min: min_year,
+  max: max_year,
+  values: [(min_year + max_year) / 2],
+  slide: function(event, ui) {
+    update_graph(ui.values[0]);
+  },
+});
+
+function update_graph(year) {
+  $("#selected-year").text("Year: " + year);
+  render_chart(convert_data(year));
+}
+update_graph($("#year-slider").slider("values")[0]);
