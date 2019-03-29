@@ -64,10 +64,20 @@ var render_chart = function(graph) {
   function select_node(d, i, gs) {
     var is_selected = $(gs[i]).hasClass("selected");
     $(gs).removeClass("selected");
-    if (!is_selected)
+    $(gs).removeClass("adj_selected");
+    if (!is_selected) {
       $(gs[i]).addClass("selected");
-    else
+      for (let i = 0; i < graph.links.length; i++) {
+        if (graph.links[i].source !== d && graph.links[i].target !== d) continue;
+        let other_node = graph.links[i].source;
+        if (graph.links[i].source == d) other_node = graph.links[i].target;
+        console.log(other_node);
+        if (other_node !== d) $(gs[other_node.index]).addClass("adj_selected");
+      }
+    }
+    else {
       $(gs[i]).removeClass("selected");
+    }
   }
 
   var text = g.append("g")
