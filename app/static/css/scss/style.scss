@@ -47,9 +47,13 @@ body {
 }
 
 #d3-viewport {
-  .links line {
+  .link {
     stroke: #999;
     stroke-opacity: 0.8;
+    &.selected {
+      stroke: black;
+      stroke-opacity: 1.0;
+    }
   }
 
   .node {
@@ -64,7 +68,7 @@ body {
     }
     &.adj_selected {
       circle {
-        stroke: orange;
+        stroke: #f66;
       }
     }
   }

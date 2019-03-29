@@ -16,7 +16,7 @@ for (var i = 0; i < task_results["nodes"].length; i++) {
 var svg = d3.select("svg"),
     width = document.getElementById("d3-viewport").clientWidth,
     height = document.getElementById("d3-viewport").clientHeight,
-    radius = 6;
+    radius = 8;
 svg.attr("viewBox", [-width / 2, -height / 2, width, height]);
 
 var color = d3.scaleOrdinal(d3.schemeCategory10);
@@ -25,12 +25,12 @@ var simulation = d3.forceSimulation()
     .force("link", d3.forceLink()
       .id(function(d) { return d.id; })      )
     .force("charge", d3.forceManyBody()
-      .strength(function(d) { return -100; })
+      .strength(function(d) { return -100 * Math.pow(2, radius / 8); })
       )
     .force("x", d3.forceX())
     .force("y", d3.forceY());
 
-var render_chart = function(graph) {
+function render_chart(graph) {
   // Clear svg.
   d3.selectAll("svg > *").remove();
 
@@ -38,57 +38,59 @@ var render_chart = function(graph) {
   var g = svg.append("g")
     .attr("class", "everything");
 
-  const link = g.append("g")
+  const links = g.append("g")
       .attr("class", "links")
       .attr("stroke", "#999")
       .attr("stroke-opacity", 0)
     .selectAll("line")
     .data(graph.links)
     .enter().append("line")
+      .attr("class", "link")
       .attr("stroke-width", function(d) { return d["value"] / max_value * 6 + 1.0; });
 
-  const node = g.append("g")
+  const nodes = g.append("g")
       .attr("class", "nodes")
     .selectAll("circle")
     .data(graph.nodes)
     .enter().append("g")
       .attr("class", "node")
       .on("click", select_node)
-      .append("circle")
-        .attr("r", function(d) { return radius * (1 + d["value"]); })
-        .attr("fill", color)
-        .call(drag(simulation))
+      .call(drag(simulation));
 
-  // TODO: https://stackoverflow.com/questions/11857615/placing-labels-at-the-center-of-nodes-in-d3-js
+  nodes.append("circle")
+    .attr("r", function(d) { return radius * (1 + d["value"]); })
+    .attr("fill", color);
+
+  nodes.append("text")      
+    .attr("dy", ".35em")
+    .attr("class", "unselectable")
+    .attr("text-anchor", "middle")
+    .text(function(d) { return d.id });
 
   function select_node(d, i, gs) {
+    console.log(graph, links);
     var is_selected = $(gs[i]).hasClass("selected");
+
     $(gs).removeClass("selected");
     $(gs).removeClass("adj_selected");
+    $(links._groups[0]).removeClass("selected");
+
     if (!is_selected) {
       $(gs[i]).addClass("selected");
       for (let i = 0; i < graph.links.length; i++) {
         if (graph.links[i].source !== d && graph.links[i].target !== d) continue;
         let other_node = graph.links[i].source;
         if (graph.links[i].source == d) other_node = graph.links[i].target;
-        console.log(other_node);
-        if (other_node !== d) $(gs[other_node.index]).addClass("adj_selected");
+        if (other_node !== d) {
+          $(gs[other_node.index]).addClass("adj_selected");
+          $(links._groups[0][graph.links[i].index]).addClass("selected");
+        }
       }
     }
     else {
       $(gs[i]).removeClass("selected");
     }
   }
-
-  var text = g.append("g")
-      .attr("class", "labels")
-      .selectAll("text")
-      .data(graph.nodes)
-      .enter().append("text")
-      .attr("dx", radius + 5)
-      .attr("dy", ".35em")
-      .attr("class", "unselectable")
-      .text(function(d) { return d.id });
 
   simulation
       .nodes(graph.nodes)
@@ -98,17 +100,14 @@ var render_chart = function(graph) {
       .links(graph.links);
 
   function ticked() {
-    link.attr("x1", function(d) { return d.source.x; })
+    links.attr("x1", function(d) { return d.source.x; })
         .attr("y1", function(d) { return d.source.y; })
         .attr("x2", function(d) { return d.target.x; })
         .attr("y2", function(d) { return d.target.y; });
 
-    node.attr("transform", function(d) {
+    nodes.attr("transform", function(d) {
           return "translate(" + d.x + "," + d.y + ")";
         });
-
-    text.attr("x", function(d) { return d.x; })
-        .attr("y", function(d) { return d.y; });
   }
 
   // Zoom logic
