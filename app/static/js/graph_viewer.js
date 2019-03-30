@@ -1,8 +1,9 @@
 //http://bl.ocks.org/heybignick/3faf257bbbbc7743bb72310d03b86ee8
 //http://bl.ocks.org/mbostock/1129492
 //https://observablehq.com/@d3/disjoint-force-directed-graph
+//http://bl.ocks.org/ericcoopey/6c602d7cb14b25c179a4
 
-function create_graph(graph) {
+function createGraph(graph) {
   var svg = d3.select("svg"),
       width = document.getElementById("d3-viewport").clientWidth,
       height = document.getElementById("d3-viewport").clientHeight,
@@ -23,16 +24,65 @@ function create_graph(graph) {
 
   // Encompassing group for zoom.
   var g = svg.append("g").attr("class", "graph");
-  var link = g.append("g").attr("class","links");
-  var node = g.append("g").attr("class","nodes");
+  var link = g.append("g").attr("class","links").selectAll("line");
+  var node = g.append("g").attr("class","nodes").selectAll("g.node");
 
-  render_graph();
+  renderGraph();
 
-  function render_graph() {
+  function findNode(node_id) {
+    for (var i = 0; i < graph.nodes.length; i++) {
+      if (graph.nodes[i].id == node_id) return i;
+    }
+    return -1;
+  }
 
-    node = node.selectAll("g.node").data(graph.nodes);
+  function findLink(source_id, target_id) {
+    
+  }
+
+  function clamp(val) {
+    if (val < 0.0) return 0.0;
+    if (val > 1.0) return 1.0;
+    return val;
+  }
+
+  this.addNode = function(node) {
+    graph.nodes.push(node);
+    renderGraph();
+  }
+
+  this.addLink = function(link) {
+    graph.links.push(link);
+    renderGraph();
+  }
+
+  this.removeNode = function(node_id) {
+    let index = findNode(node_id);
+    if (index !== -1) {
+      graph.nodes.splice(index, 1);
+      graph.links = graph.links.filter(function(value, index, arr) {
+        return value.source.id !== node_id && value.target.id !== node_id;
+      });
+    }
+    renderGraph();
+  };
+
+  this.removeLink = function(link) {
+
+  }
+
+  this.updateNodeValue = function(node_id, node_value) {
+    let index = findNode(node_id);
+    console.log(index,graph.nodes[index].value, node_value, clamp(node_value));
+    if (index == -1) return;
+    graph.nodes[index].value = clamp(node_value);
+    renderGraph();
+  }
+
+  function renderGraph() {
+    node = node.data(graph.nodes);
     node.exit().remove();
-
+    console.log(node);
     let node_enter = node.enter().append("g")
       .attr("class","node")
       .on("click", select_node)
@@ -40,8 +90,7 @@ function create_graph(graph) {
 
     node_enter.append("circle")
       .attr("class", "node-circle")
-      .attr("fill", color)
-      .attr("r", function(d) { return radius * (1 + d["value"]); });
+      .attr("fill", color);
 
     node_enter.append("text")
       .attr("dy", ".35em")
@@ -51,7 +100,10 @@ function create_graph(graph) {
 
     node = node_enter.merge(node);
 
-    link = link.selectAll("line").data(graph.links);
+    node.select("circle")
+      .attr("r", function(d) { return radius * (1 + d["value"]); });
+
+    link = link.data(graph.links);
     link.exit().remove();
     link = link.enter().append("line")
         .attr("class", "link")
@@ -61,7 +113,8 @@ function create_graph(graph) {
 
     simulation.nodes(graph.nodes);
     simulation.force("link").links(graph.links);
-    simulation.restart();
+    // Restart with some alpha so that new nodes/links move. 
+    simulation.alphaTarget(0.01).restart();
 
     // Zoom logic
     // From https://bl.ocks.org/puzzler10/4438752bb93f45dc5ad5214efaa12e4a
