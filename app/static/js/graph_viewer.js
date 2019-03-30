@@ -79,13 +79,19 @@ function createGraph(graph) {
     renderGraph();
   }
 
+  this.fullUpdate = function(new_graph) {
+    graph = new_graph;
+    renderGraph();
+  }
+
   function renderGraph() {
     node = node.data(graph.nodes);
     node.exit().remove();
+    // TODO: If removing a selected node, unselect it first.
+
     console.log(node);
     let node_enter = node.enter().append("g")
       .attr("class","node")
-      .on("click", select_node)
       .call(drag(simulation));
 
     node_enter.append("circle")
@@ -100,21 +106,32 @@ function createGraph(graph) {
 
     node = node_enter.merge(node);
 
+    node
+      .classed("selected", false)
+      .classed("adj_selected", false)
+      .on("click", select_node);
+
     node.select("circle")
       .attr("r", function(d) { return radius * (1 + d["value"]); });
+
+    var max_value = -1;
+    for (let i = 0; i < graph.links.length; i++) {
+      max_value = Math.max(max_value, graph.links[i].value);
+    }
 
     link = link.data(graph.links);
     link.exit().remove();
     link = link.enter().append("line")
         .attr("class", "link")
-        .attr("id", function(d) { return d.source + "-" + d.target })
       .merge(link)
+      .attr("id", function(d) { return d.source + "-" + d.target })
+      .classed("selected", false)
       .attr("stroke-width", function(d) { return d["value"] / max_value * 6 + 1.0; });
 
     simulation.nodes(graph.nodes);
     simulation.force("link").links(graph.links);
     // Restart with some alpha so that new nodes/links move. 
-    simulation.alphaTarget(0.01).restart();
+    simulation.restart();
 
     // Zoom logic
     // From https://bl.ocks.org/puzzler10/4438752bb93f45dc5ad5214efaa12e4a
@@ -132,15 +149,15 @@ function createGraph(graph) {
   }  
 
   function select_node(d, i, gs) {
-    console.log(graph, graph.links);
     var is_selected = $(gs[i]).hasClass("selected");
-
+    console.log(d, gs);
     $(gs).removeClass("selected");
     $(gs).removeClass("adj_selected");
     $(".link").removeClass("selected");
 
     if (!is_selected) {
       $(gs[i]).addClass("selected");
+      console.log(graph.links.length);
       for (let i = 0; i < graph.links.length; i++) {
         if (graph.links[i].source !== d && graph.links[i].target !== d) continue;
         let other_node = graph.links[i].source;
