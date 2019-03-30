@@ -37,7 +37,9 @@ var convert_data = function(year) {
 }
 
 //render_chart(convert_data(1905));
-render_chart(task_results);
+create_graph(task_results);
+//task_results["nodes"].push({"id":"NEW_ADDITION","group":1,"value":Math.random()});
+//render_chart(task_results);
 /*
 var min_year = 3000;
 var max_year = 0;
