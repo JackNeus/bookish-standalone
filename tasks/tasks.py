@@ -147,6 +147,7 @@ def get_word_freq(file_data, keywords):
         file = open(filename, "r")
     except FileNotFoundError as e:
         return None
+    # TODO: Handle .lower() here.
     file = list(map(lambda x: x.strip(), file.readlines()))
     freqs = init_dict(keywords, 0)
     for word in file:
@@ -207,6 +208,7 @@ def get_bigrams(files, year):
             continue
         
         file_bigrams = defaultdict(lambda: 0)
+        # TODO: Handle .lower() here.
         file = list(map(lambda x: x.strip(), file.readlines()))
         for i in range(len(file) - 1):
             if file[i+1] in stopwords:
