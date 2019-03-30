@@ -73,7 +73,6 @@ function createGraph(graph) {
 
   this.updateNodeValue = function(node_id, node_value) {
     let index = findNode(node_id);
-    console.log(index,graph.nodes[index].value, node_value, clamp(node_value));
     if (index == -1) return;
     graph.nodes[index].value = clamp(node_value);
     renderGraph();
@@ -87,9 +86,8 @@ function createGraph(graph) {
   function renderGraph() {
     node = node.data(graph.nodes);
     node.exit().remove();
-    // TODO: If removing a selected node, unselect it first.
+    // TODO: If a selected node persists through an update, update the selection.
 
-    console.log(node);
     let node_enter = node.enter().append("g")
       .attr("class","node")
       .call(drag(simulation));
@@ -150,14 +148,12 @@ function createGraph(graph) {
 
   function select_node(d, i, gs) {
     var is_selected = $(gs[i]).hasClass("selected");
-    console.log(d, gs);
     $(gs).removeClass("selected");
     $(gs).removeClass("adj_selected");
     $(".link").removeClass("selected");
 
     if (!is_selected) {
       $(gs[i]).addClass("selected");
-      console.log(graph.links.length);
       for (let i = 0; i < graph.links.length; i++) {
         if (graph.links[i].source !== d && graph.links[i].target !== d) continue;
         let other_node = graph.links[i].source;

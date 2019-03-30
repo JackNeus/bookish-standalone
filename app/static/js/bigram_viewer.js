@@ -64,8 +64,6 @@ Object.keys(task_results).forEach(function(year) {
     min_year = year;
 });
 
-console.log(min_year, max_year);
-
 $("#year-slider").slider({
   min: min_year,
   max: max_year,
@@ -77,12 +75,10 @@ $("#year-slider").slider({
 
 // Initialize graph.
 let init_year = $("#year-slider").slider("values")[0];
-console.log(convert_data(init_year));
 $("#selected-year").text("Year: " + init_year);
 var graph = new createGraph(convert_data(init_year));
 
 function updateGraph(year) {
   $("#selected-year").text("Year: " + year);
   graph.fullUpdate(convert_data(year));
-  //render_chart(convert_data(year));
 }
