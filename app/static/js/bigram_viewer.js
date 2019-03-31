@@ -77,26 +77,27 @@ function updateGraph(graph, new_data) {
     return [add, update, remove];
   }
 
-  let action_items = diff(old_data.nodes, new_data.nodes, function(d) { return d.id; });
-  action_items[0].forEach(function(d) {
-    graph.addNode(d);
-  });
-  action_items[1].forEach(function(d) {
-    graph.updateNodeValue(d.id, d.value);
-  });
-  action_items[2].forEach(function(d) {
+  let node_action_items = diff(old_data.nodes, new_data.nodes, function(d) { return d.id; });
+  let link_action_items = diff(old_data.links, new_data.links, getLinkId);
+  
+  node_action_items[2].forEach(function(d) {
     graph.removeNode(d.id);
   });
+  node_action_items[0].forEach(function(d) {
+      graph.addNode(d);
+  });
+  node_action_items[1].forEach(function(d) {
+      graph.updateNodeValue(d.id, d.value);
+  });
 
-  action_items = diff(old_data.links, new_data.links, getLinkId);
-  action_items[0].forEach(function(d) {
+  link_action_items[2].forEach(function(d) {
+    graph.removeLink(d);
+  });
+  link_action_items[0].forEach(function(d) {
     graph.addLink(d);
   });
-  action_items[1].forEach(function(d) {
+  link_action_items[1].forEach(function(d) {
     graph.updateLinkValue(d);
-  });
-  action_items[2].forEach(function(d) {
-    graph.removeLink(d);
   });
 }
 /*
