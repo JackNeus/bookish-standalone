@@ -66,7 +66,6 @@ function createGraph(graph) {
   }
 
   this.addLink = function(link) {
-    console.log(link);
     graph.links.push(link);
     renderGraph();
   }
