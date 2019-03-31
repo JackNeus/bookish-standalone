@@ -3,7 +3,16 @@
 //https://observablehq.com/@d3/disjoint-force-directed-graph
 //http://bl.ocks.org/ericcoopey/6c602d7cb14b25c179a4
 
+function getLinkId(link) {
+  if (typeof link.source === "string")
+    return link.source + "-" + link.target;
+  return link.source.id + "-" + link.target.id;
+}
+
 function createGraph(graph) {
+  // Defensive copy.
+  graph = $.extend(true, {}, graph);
+
   var svg = d3.select("svg"),
       width = document.getElementById("d3-viewport").clientWidth,
       height = document.getElementById("d3-viewport").clientHeight,
@@ -30,14 +39,19 @@ function createGraph(graph) {
   renderGraph();
 
   function findNode(node_id) {
-    for (var i = 0; i < graph.nodes.length; i++) {
+    for (let i = 0; i < graph.nodes.length; i++) {
       if (graph.nodes[i].id == node_id) return i;
     }
     return -1;
   }
 
-  function findLink(source_id, target_id) {
-    
+  function findLink(link) {
+    let link_id = getLinkId(link);
+    for (let i = 0; i < graph.links.length; i++) {
+      if (link_id === getLinkId(graph.links[i]))
+        return i;
+    }
+    return -1;
   }
 
   function clamp(val) {
@@ -52,6 +66,7 @@ function createGraph(graph) {
   }
 
   this.addLink = function(link) {
+    console.log(link);
     graph.links.push(link);
     renderGraph();
   }
@@ -68,19 +83,29 @@ function createGraph(graph) {
   };
 
   this.removeLink = function(link) {
-
+    let index = findLink(link);
+    if (index !== -1) {
+      graph.links.splice(index, 1);
+    }
+    renderGraph();
   }
 
   this.updateNodeValue = function(node_id, node_value) {
     let index = findNode(node_id);
-    if (index == -1) return;
+    if (index === -1) return;
     graph.nodes[index].value = clamp(node_value);
     renderGraph();
   }
 
-  this.fullUpdate = function(new_graph) {
-    graph = new_graph;
+  this.updateLinkValue = function(link) {
+    let index = findLink(link);
+    if (index === -1) return;
+    graph.links[index].value = link.value;
     renderGraph();
+  }
+
+  this.getData = function() {
+    return graph;
   }
 
   function renderGraph() {
@@ -122,7 +147,7 @@ function createGraph(graph) {
     link = link.enter().append("line")
         .attr("class", "link")
       .merge(link)
-      .attr("id", function(d) { return d.source + "-" + d.target })
+      .attr("id", getLinkId)
       .classed("selected", false)
       .attr("stroke-width", function(d) { return d["value"] / max_value * 6 + 1.0; });
 
