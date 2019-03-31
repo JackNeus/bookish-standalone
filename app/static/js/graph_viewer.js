@@ -153,7 +153,7 @@ function createGraph(graph) {
     simulation.nodes(graph.nodes);
     simulation.force("link").links(graph.links);
     // Restart with some alpha so that new nodes/links move. 
-    simulation.restart();
+    simulation.alpha(0.1).restart();
 
     // Zoom logic
     // From https://bl.ocks.org/puzzler10/4438752bb93f45dc5ad5214efaa12e4a
