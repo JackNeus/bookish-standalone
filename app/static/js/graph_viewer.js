@@ -3,7 +3,16 @@
 //https://observablehq.com/@d3/disjoint-force-directed-graph
 //http://bl.ocks.org/ericcoopey/6c602d7cb14b25c179a4
 
+function getLinkId(link) {
+  if (typeof link.source === "string")
+    return link.source + "-" + link.target;
+  return link.source.id + "-" + link.target.id;
+}
+
 function createGraph(graph) {
+  // Defensive copy.
+  graph = $.extend(true, {}, graph);
+
   var svg = d3.select("svg"),
       width = document.getElementById("d3-viewport").clientWidth,
       height = document.getElementById("d3-viewport").clientHeight,
@@ -30,14 +39,19 @@ function createGraph(graph) {
   renderGraph();
 
   function findNode(node_id) {
-    for (var i = 0; i < graph.nodes.length; i++) {
+    for (let i = 0; i < graph.nodes.length; i++) {
       if (graph.nodes[i].id == node_id) return i;
     }
     return -1;
   }
 
-  function findLink(source_id, target_id) {
-    
+  function findLink(link) {
+    let link_id = getLinkId(link);
+    for (let i = 0; i < graph.links.length; i++) {
+      if (link_id === getLinkId(graph.links[i]))
+        return i;
+    }
+    return -1;
   }
 
   function clamp(val) {
@@ -68,28 +82,38 @@ function createGraph(graph) {
   };
 
   this.removeLink = function(link) {
-
+    let index = findLink(link);
+    if (index !== -1) {
+      graph.links.splice(index, 1);
+    }
+    renderGraph();
   }
 
   this.updateNodeValue = function(node_id, node_value) {
     let index = findNode(node_id);
-    if (index == -1) return;
+    if (index === -1) return;
     graph.nodes[index].value = clamp(node_value);
     renderGraph();
   }
 
-  this.fullUpdate = function(new_graph) {
-    graph = new_graph;
+  this.updateLinkValue = function(link) {
+    let index = findLink(link);
+    if (index === -1) return;
+    graph.links[index].value = link.value;
     renderGraph();
   }
 
+  this.getData = function() {
+    return graph;
+  }
+
   function renderGraph() {
-    node = node.data(graph.nodes);
+    node = node.data(graph.nodes, function(d) { return d.id });
     node.exit().remove();
-    // TODO: If a selected node persists through an update, update the selection.
 
     let node_enter = node.enter().append("g")
       .attr("class","node")
+      .attr("id", function(d) { return d.id; })
       .call(drag(simulation));
 
     node_enter.append("circle")
@@ -105,9 +129,8 @@ function createGraph(graph) {
     node = node_enter.merge(node);
 
     node
-      .classed("selected", false)
       .classed("adj_selected", false)
-      .on("click", select_node);
+      .on("click", handle_select_node);
 
     node.select("circle")
       .attr("r", function(d) { return radius * (1 + d["value"]); });
@@ -117,19 +140,23 @@ function createGraph(graph) {
       max_value = Math.max(max_value, graph.links[i].value);
     }
 
-    link = link.data(graph.links);
+    link = link.data(graph.links, function(d) { return getLinkId(d); });
     link.exit().remove();
     link = link.enter().append("line")
         .attr("class", "link")
       .merge(link)
-      .attr("id", function(d) { return d.source + "-" + d.target })
+      .attr("id", getLinkId)
       .classed("selected", false)
       .attr("stroke-width", function(d) { return d["value"] / max_value * 6 + 1.0; });
 
     simulation.nodes(graph.nodes);
     simulation.force("link").links(graph.links);
     // Restart with some alpha so that new nodes/links move. 
-    simulation.restart();
+    simulation.alpha(0.1).restart();
+
+    $("g.node.selected").each(function(i) {
+      select_node($("g.node#"+$(this)[i].id)[0]);
+    });
 
     // Zoom logic
     // From https://bl.ocks.org/puzzler10/4438752bb93f45dc5ad5214efaa12e4a
@@ -146,30 +173,55 @@ function createGraph(graph) {
     }
   }  
 
-  function select_node(d, i, gs) {
+  function select_node(node) {
+    let id = node.id;
+    let idx = findNode(id);
+    if (idx == -1) return;
+    let data = graph.nodes[idx];
+
+    $(node).addClass("selected");
+    for (let i = 0; i < graph.links.length; i++) {
+      if (graph.links[i].source !== data && graph.links[i].target !== data) continue;
+      let other_node = graph.links[i].source;
+      if (graph.links[i].source === data) other_node = graph.links[i].target;
+      // Add appropriate classes to adjacent nodes and edges.
+      if (other_node !== data) {
+	let node_e = $("g.node#"+other_node.id);
+        node_e.addClass("adj_selected");
+        $("g.nodes").append(node_e); // Move selected nodes to top of DOM.
+        let link = $("#"+getLinkId(graph.links[i]));
+        link.addClass("selected");
+        $("g.links").append(link);  // Move selected links to the top.
+      }
+    }
+    $("g.nodes").append($(node)); // Move selected node to top of DOM.
+  }
+
+  function handle_select_node(d, i, gs) {
     var is_selected = $(gs[i]).hasClass("selected");
     $(gs).removeClass("selected");
     $(gs).removeClass("adj_selected");
     $(".link").removeClass("selected");
 
     if (!is_selected) {
-      $(gs[i]).addClass("selected");
-      for (let i = 0; i < graph.links.length; i++) {
-        if (graph.links[i].source !== d && graph.links[i].target !== d) continue;
-        let other_node = graph.links[i].source;
-        if (graph.links[i].source == d) other_node = graph.links[i].target;
-        // Add appropriate classes to adjacent nodes and edges.
-        if (other_node !== d) {
-          let node_e = $(gs[other_node.index]);
-          node_e.addClass("adj_selected");
-          $("g.nodes").append(node_e); // Move selected nodes to top of DOM.
-          let link_e = $("#"+graph.links[i].source.id+"-"+graph.links[i].target.id);
-          link_e.addClass("selected");
-          $("g.links").append(link_e);  // Move selected links to the top.
-        }
+      select_node(gs[i]);
+    /*$(gs[i]).addClass("selected");
+    for (let i = 0; i < graph.links.length; i++) {
+      if (graph.links[i].source !== d && graph.links[i].target !== d) continue;
+      let other_node = graph.links[i].source;
+      if (graph.links[i].source == d) other_node = graph.links[i].target;
+      // Add appropriate classes to adjacent nodes and edges.
+      if (other_node !== d) {
+        let node_e = $(gs[other_node.index]);
+        node_e.addClass("adj_selected");
+        $("g.nodes").append(node_e); // Move selected nodes to top of DOM.
+        let link_e = $("#"+graph.links[i].source.id+"-"+graph.links[i].target.id);
+        link_e.addClass("selected");
+        $("g.links").append(link_e);  // Move selected links to the top.
       }
-      $("g.nodes").append($(gs[i])); // Move selected node to top of DOM.
     }
+    $("g.nodes").append($(gs[i])); // Move selected node to top of DOM.
+    */}
     else {
       $(gs[i]).removeClass("selected");
     }
