@@ -54,31 +54,36 @@ setTimeout(function() {
 //task_results["nodes"].push({"id":"NEW_ADDITION","group":1,"value":Math.random()});
 //render_chart(task_results);
 
+var years = [];
 var min_year = 3000;
 var max_year = 0;
 Object.keys(task_results).forEach(function(year) {
   year = parseInt(year);
+  years.push(parseInt(year));
   if (year > max_year)
     max_year = year;
   if (year < min_year)
     min_year = year;
 });
 
-$("#year-slider").slider({
-  min: min_year,
-  max: max_year,
-  values: [(min_year + max_year) / 2],
-  slide: function(event, ui) {
-    updateGraph(ui.values[0]);
-  },
+years.sort();
+years.forEach(function(year) {
+  $("#year-options").append("<a value=\""+year+"\" class=\"year-btn btn btn-default\">"+year+"</a>");
+});
+
+$(".year-btn").on("click", function() {
+  console.log("here");
+  $(".year-btn").removeClass("btn-selected");
+  $(this).addClass("btn-selected");
+  let year = $(this).attr("value");
+  updateGraph(year);
 });
 
 // Initialize graph.
-let init_year = $("#year-slider").slider("values")[0];
-$("#selected-year").text("Year: " + init_year);
+let init_year = years[years.length / 2];
+$(".year-btn[value='"+init_year+"']").addClass("btn-selected");
 var graph = new createGraph(convert_data(init_year));
 
 function updateGraph(year) {
-  $("#selected-year").text("Year: " + year);
   graph.fullUpdate(convert_data(year));
 }
