@@ -120,3 +120,15 @@ init_chart();
 for (var index in task_results) {
 	add_dataset(index, task_results[index])
 }
+
+// Raw Data Show/Hide
+$("#show-data").on("click", function(d) {
+  if ($("#raw-data").hasClass("hidden")) {
+    console.log(this);
+    $(this).text("Hide Raw Data");
+    $("#raw-data").removeClass("hidden");
+  } else {
+    $(this).text("Show Raw Data");
+    $("#raw-data").addClass("hidden");
+  }
+});

@@ -138,6 +138,7 @@ let init_year = years[Math.floor(years.length / 2)];
 $(".year-btn[value='"+init_year+"']").addClass("btn-selected");
 var graph = new createGraph(convert_data(init_year));
 
+// Raw Data Show/Hide
 $("#show-data").on("click", function(d) {
   if ($("#raw-data").hasClass("hidden")) {
     console.log(this);

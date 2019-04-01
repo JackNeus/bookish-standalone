@@ -1,12 +1,13 @@
 {% extends "base.html" %}
 
 {% block app_content %}
-	<div class="row justify-content-center">	
-		<div class="chart-container margin-bottom">
+	<div id="app-content" class="row justify-content-center">	
+		<div class="chart-container">
 			<canvas id="chart" width="400" height="400"></canvas>
 		</div>
 
-		<div class="monospace">{{data}}</div>
+    <a id="show-data" class="btn btn-primary">Show Raw Data</a>
+		<div id="raw-data" class="hidden monospace">{{data}}</div>
 	</div>
 {% endblock %}
 
