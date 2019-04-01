@@ -118,6 +118,8 @@ var years = [];
 Object.keys(task_results).forEach(function(year) {
   years.push(parseInt(year));
 });
+for (let i = 1920; i < 1930; i++)
+  years.push(i);
 
 years.sort();
 years.forEach(function(year) {
@@ -128,10 +130,21 @@ $(".year-btn").on("click", function() {
   $(".year-btn").removeClass("btn-selected");
   $(this).addClass("btn-selected");
   let year = $(this).attr("value");
-  updateGraph(graph, convert_data(year));
+  updateGraph(graph, convert_data(parseInt(year)));
 });
 
 // Initialize graph.
-let init_year = years[years.length / 2];
+let init_year = years[Math.floor(years.length / 2)];
 $(".year-btn[value='"+init_year+"']").addClass("btn-selected");
 var graph = new createGraph(convert_data(init_year));
+
+$("#show-data").on("click", function(d) {
+  if ($("#raw-data").hasClass("hidden")) {
+    console.log(this);
+    $(this).text("Hide Raw Data");
+    $("#raw-data").removeClass("hidden");
+  } else {
+    $(this).text("Show Raw Data");
+    $("#raw-data").addClass("hidden");
+  }
+});

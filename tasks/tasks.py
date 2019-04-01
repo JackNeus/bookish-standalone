@@ -167,9 +167,6 @@ def get_top_bigrams(files):
 
     # Merge dictionaries.
     years = [x[1] for x in files]
-    min_year = int(min(years))
-    max_year = int(max(years))
-    years = range(min_year, max_year+1)
 
     global_freqs = init_dict(years, defaultdict(lambda: 0, {}))
     total_bigram_counts = init_dict(years, 0)
