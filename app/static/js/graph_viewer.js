@@ -325,3 +325,38 @@ function updateGraph(graph, new_data) {
     graph.updateLinkValue(d);
   });
 }
+
+// Create and initialize year buttons.
+var years = [];
+Object.keys(task_results).forEach(function(year) {
+  years.push(parseInt(year));
+});
+
+years.sort();
+years.forEach(function(year) {
+  $("#year-options").append("<a value=\""+year+"\" class=\"year-btn btn btn-default\">"+year+"</a>");
+});
+
+$(".year-btn").on("click", function() {
+  $(".year-btn").removeClass("btn-selected");
+  $(this).addClass("btn-selected");
+  let year = $(this).attr("value");
+  updateGraph(graph, convert_data(parseInt(year)));
+});
+
+// Initialize graph.
+let init_year = years[Math.floor(years.length / 2)];
+$(".year-btn[value='"+init_year+"']").addClass("btn-selected");
+var graph = new createGraph(convert_data(init_year));
+
+// Raw Data Show/Hide
+$("#show-data").on("click", function(d) {
+  if ($("#raw-data").hasClass("hidden")) {
+    console.log(this);
+    $(this).text("Hide Raw Data");
+    $("#raw-data").removeClass("hidden");
+  } else {
+    $(this).text("Show Raw Data");
+    $("#raw-data").addClass("hidden");
+  }
+});

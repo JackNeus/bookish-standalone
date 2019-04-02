@@ -14,7 +14,23 @@ for (var i = 0; i < task_results.links.length; i++) {
 for (var i = 0; i < task_results["nodes"].length; i++) {
   task_results["nodes"][i]["value"] = Math.random();
 }
+
+
+/*
+var graph = new createGraph(task_results);
+
+setTimeout(function() {
+task_results["nodes"].push({"id":"NEW_ADDITION","group":1,"value":Math.random()});
+task_results["nodes"].push({"id":"7","group":1,"value":1.0});
+task_results["links"].push({"source":"MENTHOL","target":"7","value":1.0});
+task_results["links"][10].value = 10149;
+task_results["links"].splice(task_results.links.length - 3, 1);
+updateGraph(graph, task_results);
+}, 2000);
+//render_chart(task_results);
+
 */
+
 var convert_data = function(year) {
   var data = task_results[year];
   
@@ -40,50 +56,3 @@ var convert_data = function(year) {
   return {"nodes": nodes, "links": links};
 }
 
-/*
-var graph = new createGraph(task_results);
-
-setTimeout(function() {
-task_results["nodes"].push({"id":"NEW_ADDITION","group":1,"value":Math.random()});
-task_results["nodes"].push({"id":"7","group":1,"value":1.0});
-task_results["links"].push({"source":"MENTHOL","target":"7","value":1.0});
-task_results["links"][10].value = 10149;
-task_results["links"].splice(task_results.links.length - 3, 1);
-updateGraph(graph, task_results);
-}, 2000);*/
-//render_chart(task_results);
-
-// Create and initialize year buttons.
-var years = [];
-Object.keys(task_results).forEach(function(year) {
-  years.push(parseInt(year));
-});
-
-years.sort();
-years.forEach(function(year) {
-  $("#year-options").append("<a value=\""+year+"\" class=\"year-btn btn btn-default\">"+year+"</a>");
-});
-
-$(".year-btn").on("click", function() {
-  $(".year-btn").removeClass("btn-selected");
-  $(this).addClass("btn-selected");
-  let year = $(this).attr("value");
-  updateGraph(graph, convert_data(parseInt(year)));
-});
-
-// Initialize graph.
-let init_year = years[Math.floor(years.length / 2)];
-$(".year-btn[value='"+init_year+"']").addClass("btn-selected");
-var graph = new createGraph(convert_data(init_year));
-
-// Raw Data Show/Hide
-$("#show-data").on("click", function(d) {
-  if ($("#raw-data").hasClass("hidden")) {
-    console.log(this);
-    $(this).text("Hide Raw Data");
-    $("#raw-data").removeClass("hidden");
-  } else {
-    $(this).text("Show Raw Data");
-    $("#raw-data").addClass("hidden");
-  }
-});
