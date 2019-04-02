@@ -260,9 +260,6 @@ def get_word_family_graph(file_list, word_families, in_app = True):
 
     # Merge dictionaries.
     years = [x[1] for x in file_list]
-    min_year = int(min(years))
-    max_year = int(max(years))
-    years = range(min_year, max_year+1)
 
     empty_fcm = defaultdict(lambda: copy.deepcopy(defaultdict(lambda: 0)))
     fcms = init_dict(years, empty_fcm)
