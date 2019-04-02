@@ -1,7 +1,7 @@
 # This file will contain all possible background jobs that the user can run.
-import nltk
 import math
 import os
+import copy
 import requests
 import shlex
 import subprocess
@@ -11,10 +11,14 @@ from itertools import repeat
 from rq import get_current_job
 from flask import current_app
 
-from tasks.util import *
-
-nltk.download("stopwords")
-stopwords = set(nltk.corpus.stopwords.words('english'))
+# Conditional imports so task helper functions can be run outside
+# of the application context.
+if os.environ.get("in_bookish"):
+    from tasks.util import *
+    from tasks.stopwords import stopwords
+else:
+    from util import init_dict
+    from stopwords import stopwords
 
 def resolve_task(task_name):
     if task_name == "ucsf_api_aggregate" or task_name == "ucsf_api_aggregate_task":
@@ -23,6 +27,8 @@ def resolve_task(task_name):
         return word_freq_task
     if task_name == "top_bigrams" or task_name == "top_bigrams_task":
         return top_bigrams_task
+    if task_name == "word_families" or task_name == "word_family_graph_task":
+        return word_family_graph_task
     return None
 
 # Get full results for a UCSF IDL API request.
@@ -141,6 +147,7 @@ def get_word_freq(file_data, keywords):
         file = open(filename, "r")
     except FileNotFoundError as e:
         return None
+    # TODO: Handle .lower() here.
     file = list(map(lambda x: x.strip(), file.readlines()))
     freqs = init_dict(keywords, 0)
     for word in file:
@@ -201,6 +208,7 @@ def get_bigrams(files, year):
             continue
         
         file_bigrams = defaultdict(lambda: 0)
+        # TODO: Handle .lower() here.
         file = list(map(lambda x: x.strip(), file.readlines()))
         for i in range(len(file) - 1):
             if file[i+1] in stopwords:
@@ -222,3 +230,115 @@ def get_bigrams(files, year):
         inc_task_processed()
         push_metadata_to_db("files_analyzed")
     return (year, dict(bigrams), file_length)
+
+def word_family_graph_task(file_list_path, word_families):
+    init_job([file_list_path, word_families])
+    if isinstance(word_families, str):
+        word_families = word_families.split(";")
+        word_families = [x.split(",") for x in word_families]
+    file_list = get_file_list(file_list_path)
+
+    set_task_size(len(file_list))
+    set_task_metadata("files_analyzed", 0)
+    return_from_task(get_word_family_graph(file_list, word_families))
+
+def get_word_family_graph(file_list, word_families, in_app = True):
+    keywords = []
+    if isinstance(word_families, dict):
+        word_families = word_families.values()
+    for family in word_families:
+        keywords = keywords + family
+    # Remove stopwords.
+    keywords = filter(lambda x: x not in stopwords, keywords)
+    # Remove duplicates.
+    keywords = list(set(keywords))
+    
+    if in_app:
+        word_family_data = get_pool().starmap(get_word_family_data, zip(file_list, repeat(keywords)))
+    else:
+        word_family_data = list(map(lambda x: get_word_family_data(x, keywords, in_app), file_list))
+
+    # Merge dictionaries.
+    years = [x[1] for x in file_list]
+
+    empty_fcm = defaultdict(lambda: copy.deepcopy(defaultdict(lambda: 0)))
+    fcms = init_dict(years, empty_fcm)
+    word_freqs = defaultdict(lambda: 0, [])
+    # Merge fcms by year.
+    for year, file_fcm, file_word_freqs in word_family_data:
+        for keyword in file_fcm:
+            word_freqs[keyword] += file_word_freqs[keyword]
+            for word, gfreq in file_fcm[keyword].items():
+                fcms[year][keyword][word] += gfreq
+
+    # Convert from defaultdicts to dicts.
+    fcms = dict(fcms)
+    for year in fcms:
+        fcms[year] = dict(fcms[year])
+        for keyword in fcms[year]:
+            fcms[year][keyword] = dict(fcms[year][keyword])
+    word_freqs = dict(word_freqs)
+
+    # Normalize word freq table to [0, 1].
+    if len(word_freqs) > 0:
+        min_freq = min(word_freqs.values())
+        max_freq = max(word_freqs.values())
+        for word, freq in word_freqs.items():
+            word_freqs[word] = (freq - min_freq) / (max_freq - min_freq)
+
+    # Adjust weights in fcms
+    for year in fcms:
+        max_edge_val = 0
+        # weight = log(1 + weight)
+        for keyword in fcms[year]:
+            for word, val in fcms[year][keyword].items():
+                fcms[year][keyword][word] = math.log(1+val)
+                max_edge_val = max(max_edge_val, fcms[year][keyword][word])
+        # normalize so <= 1
+        if max_edge_val != 0:
+            for keyword in fcms[year]:
+                for word, val in fcms[year][keyword].items():
+                    fcms[year][keyword][word] = val / max_edge_val
+
+    return [fcms, word_freqs]
+
+def get_word_family_data(file_data, keywords, in_app = True):
+    filename, fileyear = file_data
+    # TODO: Determine behavior when a file can't be found.
+    try:
+        file = open(filename, "r")
+    except FileNotFoundError as e:
+        return None
+    # TODO: Remove call to lower()
+    file = list(map(lambda x: x.strip().lower(), file.readlines()))
+    
+    sigma = 5
+    window_size = 4 * sigma
+    weights = [math.exp((-x**2)/(2*sigma))/sigma for x in range(0, window_size+1)]
+
+    # Only calculate fcm for keywords that appear in the file.
+    keywords = list(filter(lambda x: x in file, keywords))
+
+    # Compute feature co-ocurrence matrix using a 
+    # Gaussian weighting of word frequencies.
+    fcm = init_dict(keywords, {x: 0 for x in keywords})
+    # Also, build a frequency table for the keywords.
+    word_freq = init_dict(keywords, 0)
+    for i in range(len(file)):
+        if file[i] not in keywords:
+            continue
+        word_freq[file[i]] += 1
+        for j in range(max(0, i - window_size), min(len(file), i + window_size + 1)):
+            # Don't want to compare word to itself.
+            if i == j:
+                continue
+            if file[j] in keywords:
+                fcm[file[i]][file[j]] += weights[abs(i - j)]
+                # Avoid double counting if the words are the same.
+                if file[i] != file[j]:
+                    fcm[file[j]][file[i]] += weights[abs(i - j)]
+
+    if in_app:
+        inc_task_processed()
+        push_metadata_to_db("files_analyzed")
+    return (fileyear, fcm, word_freq)
