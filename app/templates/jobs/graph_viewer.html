@@ -1,8 +1,23 @@
-{% set graph_vis %}
-<div class="vis-row row">
-	<div id="year-options" class="btn-group btn-group-vertical col-xs-2"></div>
-  <div id="viewport-container" class="col-xs-10">
-  	<svg id="d3-viewport" width="100%" height="100%"></svg>
-  </div>
-</div>
-{% endset %}
+{% extends "base.html" %}
+
+{% block app_content %}
+	<div id="app-content" class="row justify-content-center">
+		<div class="vis-row row">
+			<div id="year-options" class="btn-group btn-group-vertical col-xs-2"></div>
+		  <div id="viewport-container" class="col-xs-10">
+		  	<svg id="d3-viewport" width="100%" height="100%"></svg>
+		  </div>
+		</div>
+    <a id="show-data" class="btn btn-primary">Show Raw Data</a>
+		<div id="raw-data" class="hidden monospace">{{data}}</div>
+	</div>
+{% endblock %}
+
+{% block scripts %}
+	{{super()}}	
+	<script type="text/javascript">
+		var task_results = JSON.parse({{data | tojson }});
+	</script>
+  <script type="text/javascript" src="../../static/js/{{vis_name}}_viewer.js"></script>
+  <script type="text/javascript" src="../../static/js/graph_viewer.js"></script> 
+{% endblock %}
