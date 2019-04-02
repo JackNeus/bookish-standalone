@@ -46,6 +46,16 @@ body {
     color: red;
 }
 
+#year-options {
+  .btn-selected {
+    color: #333;
+    //background-color: #a1a1a1;
+    //border-color: #adadad;
+    background-color: #e6e6e6;
+    border-color: #707070;
+  }
+}
+
 #d3-viewport {
   .link {
     stroke: #999;
