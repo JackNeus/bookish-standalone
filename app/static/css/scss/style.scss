@@ -2,93 +2,93 @@ body {
     padding-top: 15px;
 }
 
-.chart-container {
-    padding-top: 15px;
-    padding-right: 30px;
-}
-
-#make-ngram {
-    margin-left: 5px;
-}
-
-.ngrams {
-    margin-top: 30px;
-
-}
-
-.margin-top {
-    margin-top: 30px;
-}
-
-.margin-bottom {
-    margin-bottom: 30px;
-}
-
-.delete-ngram {
-    float: right;
-    cursor: pointer;
-}
-
-.list-group-item {
-    height: 45px;
-}
-
-.monospace {
-    font-family: monospace;
-    white-space: pre-wrap;
+.flashes {
+    color: red;
 }
 
 .container-fluid {
     max-width: 90%;
 }
 
-.flashes {
-    color: red;
+#app-content {
+  padding-bottom: 50px;
 }
 
-#year-options {
-  .btn-selected {
-    color: #333;
-    //background-color: #a1a1a1;
-    //border-color: #adadad;
-    background-color: #e6e6e6;
-    border-color: #707070;
-  }
+.chart-container {
+    padding-top: 15px;
+    padding-right: 30px;
+    margin-bottom: 30px;
 }
 
-#d3-viewport {
-  .link {
-    stroke: #999;
-    stroke-opacity: 0.8;
-    &.selected {
-      stroke: black;
-      stroke-opacity: 1.0;
+.vis-row {
+  height: 600px;
+  padding: 10px;
+  border: 1px solid #adadad;
+  margin-bottom: 35px;
+  #year-options {
+    height: 100%;
+    overflow-y: scroll;
+
+    &::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background-color: #e6e6e6;
+      //-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3); 
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: #adadad;
+      -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5); 
+    }
+
+    .btn-selected {
+      color: #333;
+      //background-color: #a1a1a1;
+      //border-color: #adadad;
+      background-color: #e6e6e6;
+      border-color: #707070;
+      z-index: 100;
     }
   }
 
-  .node {
-    circle {
-      stroke: #fff;
-      stroke-width: 1px;
-    }
-    &.selected {
-      circle {
-        stroke: red;
+  #viewport-container {
+    height: 100%;
+    #d3-viewport {
+      .link {
+        stroke: #999;
+        stroke-opacity: 0.8;
+        &.selected {
+          stroke: black;
+          stroke-opacity: 1.0;
+        }
+      }
+
+      .node {
+        circle {
+          stroke: #fff;
+          stroke-width: 1px;
+        }
+        &.selected {
+          circle {
+            stroke: red;
+          }
+        }
+        &.adj_selected {
+          circle {
+            stroke: #f66;
+          }
+        }
+      }
+
+      text {
+        font-family: sans-serif;
+        font-size: 10px;
       }
     }
-    &.adj_selected {
-      circle {
-        stroke: #f66;
-      }
-    }
-  }
-
-  text {
-    font-family: sans-serif;
-    font-size: 10px;
   }
 }
-
 
 .unselectable {
 -webkit-user-select: none;
@@ -96,4 +96,9 @@ body {
 -moz-user-select: none;
 -o-user-select: none;
 user-select: none;
+}
+
+.monospace {
+    font-family: monospace;
+    white-space: pre-wrap;
 }

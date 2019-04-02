@@ -263,3 +263,65 @@ function createGraph(graph) {
         .on("end", dragended);
   }
 }
+
+
+function updateGraph(graph, new_data) {
+  let old_data = graph.getData();
+
+  function diff(old_data, new_data, get_id) {
+    let oldIds = new Set();
+    let newIds = new Set();
+    let oldIdxs = {};
+
+    let add = new Set();
+    let update = new Set();
+    let remove = new Set();
+
+    for (let i = 0; i < old_data.length; i++) {
+      let id = get_id(old_data[i]);
+      oldIds.add(id);
+      oldIdxs[id] = i;
+    }
+    for (let i = 0; i < new_data.length; i++) {
+      let id = get_id(new_data[i]);
+      newIds.add(id);
+      if (!oldIds.has(id)) {
+        add.add(new_data[i]);
+      } else {
+        let oldNode = old_data[oldIdxs[id]];
+        // TODO: Generalize.
+        if (oldNode.value !== new_data[i].value) {
+          update.add(new_data[i]);
+        }
+      }
+    }
+    for (let i = 0; i < old_data.length; i++) {
+      if (!newIds.has(get_id(old_data[i])))
+        remove.add(old_data[i]);
+    }
+    return [add, update, remove];
+  }
+
+  let node_action_items = diff(old_data.nodes, new_data.nodes, function(d) { return d.id; });
+  let link_action_items = diff(old_data.links, new_data.links, getLinkId);
+  
+  node_action_items[2].forEach(function(d) {
+    graph.removeNode(d.id);
+  });
+  node_action_items[0].forEach(function(d) {
+      graph.addNode(d);
+  });
+  node_action_items[1].forEach(function(d) {
+      graph.updateNodeValue(d.id, d.value);
+  });
+
+  link_action_items[2].forEach(function(d) {
+    graph.removeLink(d);
+  });
+  link_action_items[0].forEach(function(d) {
+    graph.addLink(d);
+  });
+  link_action_items[1].forEach(function(d) {
+    graph.updateLinkValue(d);
+  });
+}
