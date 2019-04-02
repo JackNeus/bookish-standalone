@@ -327,10 +327,7 @@ function updateGraph(graph, new_data) {
 }
 
 // Create and initialize year buttons.
-var years = [];
-Object.keys(task_results).forEach(function(year) {
-  years.push(parseInt(year));
-});
+var years = get_data_years();
 
 years.sort();
 years.forEach(function(year) {

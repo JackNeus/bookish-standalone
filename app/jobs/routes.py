@@ -110,7 +110,7 @@ def view(id):
 		return render_template("jobs/graph_viewer.html", vis_name="bigram", data = results)
 	elif job.task == "word_family_graph_task":
 		results = results.strip().split("\n")
-		return render_template("jobs/graph_viewer.html", vis_name="wordfam", data = results[0])
+		return render_template("jobs/graph_viewer.html", vis_name="wordfam", data = json.dumps(results))
 	else:
 		return render_template("jobs/default_viewer.html", data = results)
 	return redirect(url_for("jobs.jobs_index"))
