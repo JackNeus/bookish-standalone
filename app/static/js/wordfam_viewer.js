@@ -9,12 +9,8 @@ var get_data_years = function() {
   return years;
 }
 
-console.log(task_results);
-
-
 var convert_data = function(year) {
   var adj_matrix = task_results[0][year];
-  console.log(adj_matrix);
   var node_set = new Set();
   var links = [];
 
@@ -39,7 +35,6 @@ var convert_data = function(year) {
   }
   var nodes = [];
   node_set.forEach(function(element) {
-    console.log(task_results[1]);
     nodes.push({
       "id": element,
       "group": 1,
