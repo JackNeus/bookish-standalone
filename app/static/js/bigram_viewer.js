@@ -31,6 +31,14 @@ updateGraph(graph, task_results);
 
 */
 
+var get_data_years = function() {
+  var years = [];
+  Object.keys(task_results).forEach(function(year) {
+    years.push(parseInt(year));
+  });
+  return years;
+}
+
 var convert_data = function(year) {
   var data = task_results[year];
   

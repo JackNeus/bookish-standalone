@@ -241,9 +241,12 @@ def word_family_graph_task(file_list_path, word_families):
 
 def get_word_family_graph(file_list, word_families, in_app = True):
     keywords = []
-    if isinstance(word_families, dict):
-        word_families = word_families.values()
-    for family in word_families:
+    if isinstance(word_families, list):
+        temp = {}
+        for i in range(len(word_families)):
+            temp[i] = word_families[i]
+        word_families = temp
+    for family in word_families.values():
         keywords = keywords + family
     # Remove stopwords.
     keywords = filter(lambda x: x not in stopwords, keywords)
@@ -260,28 +263,30 @@ def get_word_family_graph(file_list, word_families, in_app = True):
 
     empty_fcm = defaultdict(lambda: copy.deepcopy(defaultdict(lambda: 0)))
     fcms = init_dict(years, empty_fcm)
-    word_freqs = defaultdict(lambda: 0, [])
+    word_freqs = init_dict(years, defaultdict(lambda: 0, []))
     # Merge fcms by year.
     for year, file_fcm, file_word_freqs in word_family_data:
         for keyword in file_fcm:
-            word_freqs[keyword] += file_word_freqs[keyword]
+            word_freqs[year][keyword] += file_word_freqs[keyword]
             for word, gfreq in file_fcm[keyword].items():
                 fcms[year][keyword][word] += gfreq
 
     # Convert from defaultdicts to dicts.
     fcms = dict(fcms)
+    word_freqs = dict(word_freqs)
     for year in fcms:
+        word_freqs[year] = dict(word_freqs[year])
         fcms[year] = dict(fcms[year])
         for keyword in fcms[year]:
             fcms[year][keyword] = dict(fcms[year][keyword])
-    word_freqs = dict(word_freqs)
 
     # Normalize word freq table to [0, 1].
-    if len(word_freqs) > 0:
-        min_freq = min(word_freqs.values())
-        max_freq = max(word_freqs.values())
-        for word, freq in word_freqs.items():
-            word_freqs[word] = (freq - min_freq) / (max_freq - min_freq)
+    for year in word_freqs:
+        if len(word_freqs[year]) > 0:
+            min_freq = min(word_freqs[year].values())
+            max_freq = max(word_freqs[year].values())
+            for word, freq in word_freqs[year].items():
+                word_freqs[year][word] = (freq - min_freq) / (max_freq - min_freq)
 
     # Adjust weights in fcms
     for year in fcms:
@@ -297,7 +302,7 @@ def get_word_family_graph(file_list, word_families, in_app = True):
                 for word, val in fcms[year][keyword].items():
                     fcms[year][keyword][word] = val / max_edge_val
 
-    return [fcms, word_freqs]
+    return [fcms, word_freqs, word_families]
 
 def get_word_family_data(file_data, keywords, in_app = True):
     filename, fileyear = file_data
