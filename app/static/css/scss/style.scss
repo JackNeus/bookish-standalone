@@ -77,7 +77,8 @@ body {
         }
         &.adj_selected {
           circle {
-            stroke: #f66;
+            stroke: black;
+            #stroke: #f66;
           }
         }
       }

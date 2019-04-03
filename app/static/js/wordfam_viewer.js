@@ -1,5 +1,5 @@
-task_results[0] = JSON.parse(task_results[0]);
-task_results[1] = JSON.parse(task_results[1]);
+for (var i = 0; i < task_results.length; i++)
+  task_results[i] = JSON.parse(task_results[i]);
 
 var get_data_years = function() {
   var years = [];
@@ -33,11 +33,21 @@ var convert_data = function(year) {
       });     
     }
   }
+
+  // Convert text labels of node groups to numbers for 
+  // coloring purposes.
+  var node_groups = {}
+  for (var group in task_results[2]) {
+    for (var j = 0; j < task_results[2][group].length; j++) {
+      node_groups[task_results[2][group][j]] = group;
+    }
+  }
+
   var nodes = [];
   node_set.forEach(function(element) {
     nodes.push({
       "id": element,
-      "group": 1,
+      "group": node_groups[element],
       "value": task_results[1][year][element]
     });
   });

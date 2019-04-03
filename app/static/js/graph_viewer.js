@@ -19,8 +19,14 @@ function createGraph(graph) {
       radius = 8;
   svg.attr("viewBox", [-width / 2, -height / 2, width, height]);
 
-  var color = d3.scaleOrdinal(d3.schemeCategory10);
-
+  var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+  var groupIndex = {};
+  for (var i = 0; i < graph.nodes.length; i++) {
+    let node = graph.nodes[i];
+    if (groupIndex[node.group] === undefined) 
+      groupIndex[node.group] = Object.keys(groupIndex).length;
+  }
+  
   var simulation = d3.forceSimulation()
     .force("link", d3.forceLink()
       .id(function(d) { return d.id; }))
@@ -62,6 +68,8 @@ function createGraph(graph) {
 
   this.addNode = function(node) {
     graph.nodes.push(node);
+    if (groupIndex[node.group] === undefined) 
+      groupIndex[node.group] = Object.keys(groupIndex).length;
     renderGraph();
   }
 
@@ -118,7 +126,7 @@ function createGraph(graph) {
 
     node_enter.append("circle")
       .attr("class", "node-circle")
-      .attr("fill", color);
+      .attr("fill", function(d, i) { return colorScale(groupIndex[d.group]); });
 
     node_enter.append("text")
       .attr("dy", ".35em")

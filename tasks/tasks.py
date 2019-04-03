@@ -241,9 +241,12 @@ def word_family_graph_task(file_list_path, word_families):
 
 def get_word_family_graph(file_list, word_families, in_app = True):
     keywords = []
-    if isinstance(word_families, dict):
-        word_families = word_families.values()
-    for family in word_families:
+    if isinstance(word_families, list):
+        temp = {}
+        for i in range(len(word_families)):
+            temp[i] = word_families[i]
+        word_families = temp
+    for family in word_families.values():
         keywords = keywords + family
     # Remove stopwords.
     keywords = filter(lambda x: x not in stopwords, keywords)
@@ -299,7 +302,7 @@ def get_word_family_graph(file_list, word_families, in_app = True):
                 for word, val in fcms[year][keyword].items():
                     fcms[year][keyword][word] = val / max_edge_val
 
-    return [fcms, word_freqs]
+    return [fcms, word_freqs, word_families]
 
 def get_word_family_data(file_data, keywords, in_app = True):
     filename, fileyear = file_data
