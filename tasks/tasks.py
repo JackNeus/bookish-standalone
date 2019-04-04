@@ -6,6 +6,7 @@ import requests
 import shlex
 import subprocess
 import queue
+import sys
 from collections import defaultdict
 from itertools import repeat
 from rq import get_current_job
@@ -233,7 +234,7 @@ def word_family_graph_task(file_list_path, word_families):
     if isinstance(word_families, str):
         word_families = word_families.split(";")
         word_families = [x.split(",") for x in word_families]
-    file_list = get_file_list(file_list_path)
+    file_list = get_file_list(file_list_path)   
 
     set_task_size(len(file_list))
     set_task_metadata("files_analyzed", 0)
@@ -252,7 +253,7 @@ def get_word_family_graph(file_list, word_families, in_app = True):
     keywords = filter(lambda x: x not in stopwords, keywords)
     # Remove duplicates.
     keywords = list(set(keywords))
-    
+
     if in_app:
         word_family_data = get_pool().starmap(get_word_family_data, zip(file_list, repeat(keywords)))
     else:
@@ -264,13 +265,17 @@ def get_word_family_graph(file_list, word_families, in_app = True):
     empty_fcm = defaultdict(lambda: copy.deepcopy(defaultdict(lambda: 0)))
     fcms = init_dict(years, empty_fcm)
     word_freqs = init_dict(years, defaultdict(lambda: 0, []))
+
     # Merge fcms by year.
-    for year, file_fcm, file_word_freqs in word_family_data:
+    for entry in word_family_data:
+        if entry is None:
+            continue
+        year, file_fcm, file_word_freqs = entry
         for keyword in file_fcm:
             word_freqs[year][keyword] += file_word_freqs[keyword]
             for word, gfreq in file_fcm[keyword].items():
                 fcms[year][keyword][word] += gfreq
-
+    
     # Convert from defaultdicts to dicts.
     fcms = dict(fcms)
     word_freqs = dict(word_freqs)
@@ -286,7 +291,10 @@ def get_word_family_graph(file_list, word_families, in_app = True):
             min_freq = min(word_freqs[year].values())
             max_freq = max(word_freqs[year].values())
             for word, freq in word_freqs[year].items():
-                word_freqs[year][word] = (freq - min_freq) / (max_freq - min_freq)
+                freq_range = max_freq - min_freq
+                if max_freq == min_freq:
+                    freq_range = 1
+                word_freqs[year][word] = (freq - min_freq) / freq_range
 
     # Adjust weights in fcms
     for year in fcms:
@@ -306,6 +314,7 @@ def get_word_family_graph(file_list, word_families, in_app = True):
 
 def get_word_family_data(file_data, keywords, in_app = True):
     filename, fileyear = file_data
+
     # TODO: Determine behavior when a file can't be found.
     try:
         file = open(filename, "r")
@@ -339,7 +348,6 @@ def get_word_family_data(file_data, keywords, in_app = True):
                 # Avoid double counting if the words are the same.
                 if file[i] != file[j]:
                     fcm[file[j]][file[i]] += weights[abs(i - j)]
-
     if in_app:
         inc_task_processed()
         push_metadata_to_db("files_analyzed")
