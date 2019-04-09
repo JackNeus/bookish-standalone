@@ -213,23 +213,7 @@ function createGraph(graph) {
 
     if (!is_selected) {
       select_node(gs[i]);
-    /*$(gs[i]).addClass("selected");
-    for (let i = 0; i < graph.links.length; i++) {
-      if (graph.links[i].source !== d && graph.links[i].target !== d) continue;
-      let other_node = graph.links[i].source;
-      if (graph.links[i].source == d) other_node = graph.links[i].target;
-      // Add appropriate classes to adjacent nodes and edges.
-      if (other_node !== d) {
-        let node_e = $(gs[other_node.index]);
-        node_e.addClass("adj_selected");
-        $("g.nodes").append(node_e); // Move selected nodes to top of DOM.
-        let link_e = $("#"+graph.links[i].source.id+"-"+graph.links[i].target.id);
-        link_e.addClass("selected");
-        $("g.links").append(link_e);  // Move selected links to the top.
-      }
     }
-    $("g.nodes").append($(gs[i])); // Move selected node to top of DOM.
-    */}
     else {
       $(gs[i]).removeClass("selected");
     }
@@ -343,15 +327,29 @@ years.forEach(function(year) {
 });
 
 $(".year-btn").on("click", function() {
-  $(".year-btn").removeClass("btn-selected");
-  $(this).addClass("btn-selected");
+  select_button($(this));
   let year = $(this).attr("value");
   updateGraph(graph, convert_data(parseInt(year)));
 });
 
+function select_button(element) {
+  $(".year-btn").removeClass("btn-selected");
+  $(element).addClass("btn-selected");
+  let year = $(element).attr("value");
+
+  let scroll_height = $("#year-options")[0].offsetHeight;
+  let element_height = $(element)[0].offsetHeight;
+  let element_pos = $(element).position().top;
+  // Element not currently visible. We want to make it visible.
+  if (element_pos + element_height < 0 || element_pos > scroll_height) {
+    let amount_to_scroll = element_pos - (scroll_height / 2) + element_height;
+    $("#year-options")[0].scrollTop += amount_to_scroll;
+  }
+}
+
 // Initialize graph.
 let init_year = years[Math.floor(years.length / 2)];
-$(".year-btn[value='"+init_year+"']").addClass("btn-selected");
+select_button($(".year-btn[value='"+init_year+"']"));
 var graph = new createGraph(convert_data(init_year));
 
 // Raw Data Show/Hide
