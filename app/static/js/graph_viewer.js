@@ -167,8 +167,8 @@ function createGraph(graph, graph_id) {
     // Restart with some alpha so that new nodes/links move. 
     simulation.alpha(0.1).restart();
 
-    $("g.node.selected").each(function(i) {
-      select_node($("g.node#"+$(this)[i].id)[0]);
+    $("g.node.selected").each(function() {
+      select_node($(this).attr("value"));
     });
 
     // Zoom logic
@@ -185,11 +185,12 @@ function createGraph(graph, graph_id) {
         g.attr("transform", d3.event.transform)
     }
   }  
+  
+  this.select_node = function(value) {
+    this.unselect_nodes();
 
-  function select_node(node) {
-    let value = $(node).attr("value");
+    let node = $("g.node#"+graph_id+"_"+value);
     let id = node.id;
-    console.log(node, id, value);
     let idx = findNode(value);
     if (idx == -1) return;
     let data = graph.nodes[idx];
@@ -211,18 +212,21 @@ function createGraph(graph, graph_id) {
     }
     $(svg).children("g.nodes").append($(node)); // Move selected node to top of DOM.
   }
+  this.unselect_nodes = function() {
+    let graph_svg = $(".d3-viewport[value='"+graph_id+"']");
+    $(graph_svg).find("g.node").removeClass("selected").removeClass("adj_selected");
+    $(graph_svg).find(".link").removeClass("selected");
+  }
 
   function handle_select_node(d, i, gs) {
     var is_selected = $(gs[i]).hasClass("selected");
-    $(gs).removeClass("selected");
-    $(gs).removeClass("adj_selected");
-    $(".link").removeClass("selected");
+    let value = $(gs[i]).attr("value");
 
     if (!is_selected) {
-      select_node(gs[i]);
+      select_node(value);
     }
     else {
-      $(gs[i]).removeClass("selected");
+      unselect_nodes();
     }
   }
 
@@ -340,16 +344,37 @@ const max_years = 3;
 
 var graphs = [];
 
+function select_node(value) {
+  for (let i = 0; i < graphs.length; i++) {
+    graphs[i].select_node(value);
+  }
+}
+function unselect_nodes() {
+  for (let i = 0; i < graphs.length; i++) {
+    graphs[i].unselect_nodes();
+  }
+}
+
 $(".year-btn").on("click", function(e) {
-  let year = $(this).attr("value");
+  let year = parseInt($(this).attr("value"));
 
   let multiselect = e.ctrlKey;
   var button_selected = $(this).hasClass("btn-selected");
-  if (!button_selected) { // Button was just selected.
-    console.log("Selected " + year);
-    select_year(year, multiselect);
+  var num_selected = $(".btn-selected").length;
+
+  // TODO: Comment reasoning
+  if (!multiselect) {
+    if (num_selected > 1 || !button_selected) {
+      select_year(year, multiselect)
+    } else if (button_selected) {
+      unselect_year(year, multiselect);
+    }
   } else {
-    unselect_year(year, multiselect);
+    if (!button_selected) { // Button was just selected.
+      select_year(year, multiselect);
+    } else {
+      unselect_year(year, multiselect);
+    }
   }
 });
 
@@ -358,6 +383,7 @@ function assign_pane(year) {
     return year_panes[year];
 
   var i = 0;
+  // Find lowest-indexed pane not in use.
   for (i = 0; i < max_years; i++) {
     var in_use = false;
     for (var index in year_panes) {
@@ -372,6 +398,7 @@ function assign_pane(year) {
   return i;
 }
 
+// Adjust width of visible panes.
 function update_panes() {
   $(".d3-viewport").removeClass("col-sm-4");
   $(".d3-viewport").removeClass("col-sm-6");
@@ -394,7 +421,6 @@ function update_panes() {
 
 function unselect_year(year, multiselect) {
   let element = $(".year-btn[value='"+year+"']");
-  console.log(year, element);
   $(element).removeClass("btn-selected");
   delete year_panes[year];
   selected_years.splice(selected_years.indexOf(year), 1);
@@ -416,21 +442,20 @@ function select_year(year, multiselect) {
     $("#year-options")[0].scrollTop += amount_to_scroll;
   }
 
-  selected_years.push(year);
+  if (selected_years.indexOf(year) == -1)
+    selected_years.push(year);
   
   if (multiselect) {
     // If max number of years have been selected, replace one of the old
     // selected years with this new one.
     if (selected_years.length > max_years) {
-      let remove_year = selected_years.shift();
-      unselect_year(remove_year, multiselect);
+      unselect_year(selected_years[0], multiselect);
     }
   } 
   else { // If not multiselect, remove all other years.
-    console.log("Not multiselected...");
-    let years_to_remove = selected_years.slice(0, selected_years.length - 1);
+    let years_to_remove = selected_years.slice();
+    years_to_remove.splice(selected_years.indexOf(year),1);
     for (let i = 0; i < years_to_remove.length; i++) {
-      console.log(years_to_remove[i]);
       unselect_year(years_to_remove[i], multiselect);
     }
   }
@@ -451,7 +476,6 @@ select_year(init_year, false);
 // Raw Data Show/Hide
 $("#show-data").on("click", function(d) {
   if ($("#raw-data").hasClass("hidden")) {
-    console.log(this);
     $(this).text("Hide Raw Data");
     $("#raw-data").removeClass("hidden");
   } else {
