@@ -13,13 +13,19 @@ function createGraph(graph, graph_id) {
   // Defensive copy.
   graph = $.extend(true, {}, graph);
 
-  var svg = d3.select("svg[value='"+graph_id+"']"),
+  var viewport = $(".d3-viewport[value='"+graph_id+"']");
+  var svg = d3.select(".d3-viewport[value='"+graph_id+"'] > svg"),
       radius = 8;
+  var graph_svg = $(".d3-viewport[value='"+graph_id+"'] > svg");
 
   this.updateViewport = function() {
-    var width = $(".d3-viewport[value='"+graph_id+"']")[0].clientWidth;
-    var height = $(".d3-viewport[value='"+graph_id+"']")[0].clientHeight;
+    var width = $(graph_svg)[0].clientWidth;
+    var height = $(graph_svg)[0].clientHeight;
     svg.attr("viewBox", [-width / 2, -height / 2, width, height]);
+  }
+
+  this.updateYearLabel = function(year) {
+    $(viewport).find(".year-label").text(year);
   }
 
   var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
@@ -204,16 +210,16 @@ function createGraph(graph, graph_id) {
       if (other_node !== data) {
 	      let node_e = $("g.node#"+graph_id+"_"+other_node.id);
         node_e.addClass("adj_selected");
-        $(svg).children("g.nodes").append(node_e); // Move selected nodes to top of DOM.
+        $(graph_svg).find("g.nodes").append(node_e); // Move selected nodes to top of DOM.
         let link = $("#"+graph_id+"_"+getLinkId(graph.links[i]));
         link.addClass("selected");
-        $(svg).children("g.links").append(link);  // Move selected links to the top.
+        $(graph_svg).find("g.links").append(link);  // Move selected links to the top.
       }
     }
-    $(svg).children("g.nodes").append($(node)); // Move selected node to top of DOM.
+    $(graph_svg).find("g.nodes").append($(node)); // Move selected node to top of DOM.
   }
+
   this.unselect_nodes = function() {
-    let graph_svg = $(".d3-viewport[value='"+graph_id+"']");
     $(graph_svg).find("g.node").removeClass("selected").removeClass("adj_selected");
     $(graph_svg).find(".link").removeClass("selected");
   }
@@ -376,6 +382,7 @@ $(".year-btn").on("click", function(e) {
       unselect_year(year, multiselect);
     }
   }
+  update_panes();
 });
 
 function assign_pane(year) {
@@ -413,9 +420,17 @@ function update_panes() {
     class_to_add = "col-sm-12";
   }
   for (var i = 0; i < selected_years.length; i++) {
-    $(".d3-viewport[value='"+i+"']").addClass(class_to_add);
-    $(".d3-viewport[value='"+i+"']").removeClass("hidden");
-    graphs[i].updateViewport();
+    let v = year_panes[selected_years[i]];
+    let pane_viewport = $(".d3-viewport[value='"+v+"']");
+    pane_viewport.addClass(class_to_add);
+    pane_viewport.removeClass("hidden");
+  }
+  let sorted_years = selected_years.slice().sort();
+  for (var i = 0; i < sorted_years.length; i++) {
+    let v = year_panes[sorted_years[i]];
+    let pane_viewport = $(".d3-viewport[value='"+v+"']");
+    graphs[v].updateViewport();
+    $("#viewport-container").append(pane_viewport);
   }
 }
 
@@ -424,7 +439,6 @@ function unselect_year(year, multiselect) {
   $(element).removeClass("btn-selected");
   delete year_panes[year];
   selected_years.splice(selected_years.indexOf(year), 1);
-  update_panes();
 }
 
 function select_year(year, multiselect) {
@@ -444,7 +458,7 @@ function select_year(year, multiselect) {
 
   if (selected_years.indexOf(year) == -1)
     selected_years.push(year);
-  
+
   if (multiselect) {
     // If max number of years have been selected, replace one of the old
     // selected years with this new one.
@@ -463,10 +477,12 @@ function select_year(year, multiselect) {
   let pane_number = assign_pane(year);
   if (graphs.length <= pane_number) {
     graphs.push(new createGraph(convert_data(year), pane_number));
+    update_panes();
   } else {
+    update_panes();
     updateGraph(graphs[pane_number], convert_data(year));
   }
-  update_panes();
+  graphs[pane_number].updateYearLabel(year);
 }
 
 // Initialize visualization.
