@@ -326,31 +326,66 @@ years.forEach(function(year) {
   $("#year-options").append("<a value=\""+year+"\" class=\"year-btn btn btn-default\">"+year+"</a>");
 });
 
-$(".year-btn").on("click", function() {
-  select_button($(this));
+var selected_years = [];
+const max_years = 3;
+
+$(".year-btn").on("click", function(e) {
   let year = $(this).attr("value");
-  updateGraph(graph, convert_data(parseInt(year)));
+
+  let multiselect = e.ctrlKey;
+  var button_selected = $(this).hasClass("btn-selected");
+  if (!button_selected) { // Button was selected.
+    select_year(year, multiselect);
+  } else {
+    if (selected_years.length > 1)
+      unselect_year(year, multiselect);
+  }
+
+  //updateGraph(graphs[0], convert_data(parseInt(year)));
 });
 
-function select_button(element) {
-  $(".year-btn").removeClass("btn-selected");
+function unselect_year(year, multiselect) {
+  let element = $(".year-btn[value='"+year+"']")[0];
+  $(element).removeClass("btn-selected");
+}
+
+function select_year(year, multiselect) {
+  year = parseInt(year);
+  let element = $(".year-btn[value='"+year+"']")[0];
+
   $(element).addClass("btn-selected");
-  let year = $(element).attr("value");
 
   let scroll_height = $("#year-options")[0].offsetHeight;
-  let element_height = $(element)[0].offsetHeight;
+  let element_height = element.offsetHeight;
   let element_pos = $(element).position().top;
   // Element not currently visible. We want to make it visible.
   if (element_pos + element_height < 0 || element_pos > scroll_height) {
     let amount_to_scroll = element_pos - (scroll_height / 2) + element_height;
     $("#year-options")[0].scrollTop += amount_to_scroll;
   }
+
+  selected_years.push(year);
+  
+  if (multiselect) {
+    // If max number of years have been selected, replace one of the old
+    // selected years with this new one.
+    if (selected_years.length > max_years) {
+      let remove_year = selected_years.shift();
+      unselect_year(remove_year, multiselect);
+    }
+  } 
+  else { // If not multiselect, remove all other years.
+    let n_years_to_remove = selected_years.length - 1;
+    while (n_years_to_remove-- > 0) {
+      unselect_year(selected_years.shift(), multiselect);
+    }
+  }
 }
 
 // Initialize graph.
 let init_year = years[Math.floor(years.length / 2)];
-select_button($(".year-btn[value='"+init_year+"']"));
-var graph = new createGraph(convert_data(init_year));
+select_year(init_year, false);
+var graphs = [new createGraph(convert_data(init_year))];
 
 // Raw Data Show/Hide
 $("#show-data").on("click", function(d) {
