@@ -9,15 +9,18 @@ function getLinkId(link) {
   return link.source.id + "-" + link.target.id;
 }
 
-function createGraph(graph) {
+function createGraph(graph, graph_id) {
   // Defensive copy.
   graph = $.extend(true, {}, graph);
 
-  var svg = d3.select("svg"),
-      width = document.getElementById("d3-viewport").clientWidth,
-      height = document.getElementById("d3-viewport").clientHeight,
+  var svg = d3.select("svg[value='"+graph_id+"']"),
       radius = 8;
-  svg.attr("viewBox", [-width / 2, -height / 2, width, height]);
+
+  this.updateViewport = function() {
+    var width = $(".d3-viewport[value='"+graph_id+"']")[0].clientWidth;
+    var height = $(".d3-viewport[value='"+graph_id+"']")[0].clientHeight;
+    svg.attr("viewBox", [-width / 2, -height / 2, width, height]);
+  }
 
   var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
   var groupIndex = {};
@@ -121,7 +124,8 @@ function createGraph(graph) {
 
     let node_enter = node.enter().append("g")
       .attr("class","node")
-      .attr("id", function(d) { return d.id; })
+      .attr("value", function(d) { return d.id; })
+      .attr("id", function(d) { return graph_id+"_"+d.id; })
       .call(drag(simulation));
 
     node_enter.append("circle")
@@ -153,7 +157,8 @@ function createGraph(graph) {
     link = link.enter().append("line")
         .attr("class", "link")
       .merge(link)
-      .attr("id", getLinkId)
+      .attr("value", getLinkId)
+      .attr("id", function(d) { return graph_id+"_"+getLinkId(d); })
       .classed("selected", false)
       .attr("stroke-width", function(d) { return d["value"] / max_value * 6 + 1.0; });
 
@@ -182,8 +187,10 @@ function createGraph(graph) {
   }  
 
   function select_node(node) {
+    let value = $(node).attr("value");
     let id = node.id;
-    let idx = findNode(id);
+    console.log(node, id, value);
+    let idx = findNode(value);
     if (idx == -1) return;
     let data = graph.nodes[idx];
 
@@ -194,15 +201,15 @@ function createGraph(graph) {
       if (graph.links[i].source === data) other_node = graph.links[i].target;
       // Add appropriate classes to adjacent nodes and edges.
       if (other_node !== data) {
-	let node_e = $("g.node#"+other_node.id);
+	      let node_e = $("g.node#"+graph_id+"_"+other_node.id);
         node_e.addClass("adj_selected");
-        $("g.nodes").append(node_e); // Move selected nodes to top of DOM.
-        let link = $("#"+getLinkId(graph.links[i]));
+        $(svg).children("g.nodes").append(node_e); // Move selected nodes to top of DOM.
+        let link = $("#"+graph_id+"_"+getLinkId(graph.links[i]));
         link.addClass("selected");
-        $("g.links").append(link);  // Move selected links to the top.
+        $(svg).children("g.links").append(link);  // Move selected links to the top.
       }
     }
-    $("g.nodes").append($(node)); // Move selected node to top of DOM.
+    $(svg).children("g.nodes").append($(node)); // Move selected node to top of DOM.
   }
 
   function handle_select_node(d, i, gs) {
@@ -326,27 +333,72 @@ years.forEach(function(year) {
   $("#year-options").append("<a value=\""+year+"\" class=\"year-btn btn btn-default\">"+year+"</a>");
 });
 
+var year_panes = {};
 var selected_years = [];
+// Currently, changing this to > 3 will break things. Sorry!
 const max_years = 3;
+
+var graphs = [];
 
 $(".year-btn").on("click", function(e) {
   let year = $(this).attr("value");
 
   let multiselect = e.ctrlKey;
   var button_selected = $(this).hasClass("btn-selected");
-  if (!button_selected) { // Button was selected.
+  if (!button_selected) { // Button was just selected.
+    console.log("Selected " + year);
     select_year(year, multiselect);
   } else {
-    if (selected_years.length > 1)
-      unselect_year(year, multiselect);
+    unselect_year(year, multiselect);
   }
-
-  //updateGraph(graphs[0], convert_data(parseInt(year)));
 });
 
+function assign_pane(year) {
+  if (year_panes[year] !== undefined)
+    return year_panes[year];
+
+  var i = 0;
+  for (i = 0; i < max_years; i++) {
+    var in_use = false;
+    for (var index in year_panes) {
+      if (year_panes[index] == i) {
+        in_use = true;
+        break;
+      }
+    }
+    if (!in_use) break;
+  }
+  year_panes[year] = i;
+  return i;
+}
+
+function update_panes() {
+  $(".d3-viewport").removeClass("col-sm-4");
+  $(".d3-viewport").removeClass("col-sm-6");
+  $(".d3-viewport").removeClass("col-sm-12");
+  $(".d3-viewport").addClass("hidden");
+  let class_to_add;
+  if (selected_years.length == 3) {
+    class_to_add = "col-sm-4";
+  } else if (selected_years.length == 2) {
+    class_to_add = "col-sm-6";
+  } else if (selected_years.length <= 1) {
+    class_to_add = "col-sm-12";
+  }
+  for (var i = 0; i < selected_years.length; i++) {
+    $(".d3-viewport[value='"+i+"']").addClass(class_to_add);
+    $(".d3-viewport[value='"+i+"']").removeClass("hidden");
+    graphs[i].updateViewport();
+  }
+}
+
 function unselect_year(year, multiselect) {
-  let element = $(".year-btn[value='"+year+"']")[0];
+  let element = $(".year-btn[value='"+year+"']");
+  console.log(year, element);
   $(element).removeClass("btn-selected");
+  delete year_panes[year];
+  selected_years.splice(selected_years.indexOf(year), 1);
+  update_panes();
 }
 
 function select_year(year, multiselect) {
@@ -375,17 +427,26 @@ function select_year(year, multiselect) {
     }
   } 
   else { // If not multiselect, remove all other years.
-    let n_years_to_remove = selected_years.length - 1;
-    while (n_years_to_remove-- > 0) {
-      unselect_year(selected_years.shift(), multiselect);
+    console.log("Not multiselected...");
+    let years_to_remove = selected_years.slice(0, selected_years.length - 1);
+    for (let i = 0; i < years_to_remove.length; i++) {
+      console.log(years_to_remove[i]);
+      unselect_year(years_to_remove[i], multiselect);
     }
   }
+
+  let pane_number = assign_pane(year);
+  if (graphs.length <= pane_number) {
+    graphs.push(new createGraph(convert_data(year), pane_number));
+  } else {
+    updateGraph(graphs[pane_number], convert_data(year));
+  }
+  update_panes();
 }
 
-// Initialize graph.
+// Initialize visualization.
 let init_year = years[Math.floor(years.length / 2)];
 select_year(init_year, false);
-var graphs = [new createGraph(convert_data(init_year))];
 
 // Raw Data Show/Hide
 $("#show-data").on("click", function(d) {
