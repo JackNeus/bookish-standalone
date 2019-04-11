@@ -9,15 +9,24 @@ function getLinkId(link) {
   return link.source.id + "-" + link.target.id;
 }
 
-function createGraph(graph) {
+function createGraph(graph, graph_id) {
   // Defensive copy.
   graph = $.extend(true, {}, graph);
 
-  var svg = d3.select("svg"),
-      width = document.getElementById("d3-viewport").clientWidth,
-      height = document.getElementById("d3-viewport").clientHeight,
+  var viewport = $(".d3-viewport[value='"+graph_id+"']");
+  var svg = d3.select(".d3-viewport[value='"+graph_id+"'] > svg"),
       radius = 8;
-  svg.attr("viewBox", [-width / 2, -height / 2, width, height]);
+  var graph_svg = $(".d3-viewport[value='"+graph_id+"'] > svg");
+
+  this.updateViewport = function() {
+    var width = $(graph_svg)[0].clientWidth;
+    var height = $(graph_svg)[0].clientHeight;
+    svg.attr("viewBox", [-width / 2, -height / 2, width, height]);
+  }
+
+  this.updateYearLabel = function(year) {
+    $(viewport).find(".year-label").text(year);
+  }
 
   var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
   var groupIndex = {};
@@ -121,7 +130,8 @@ function createGraph(graph) {
 
     let node_enter = node.enter().append("g")
       .attr("class","node")
-      .attr("id", function(d) { return d.id; })
+      .attr("value", function(d) { return d.id; })
+      .attr("id", function(d) { return graph_id+"_"+d.id; })
       .call(drag(simulation));
 
     node_enter.append("circle")
@@ -153,7 +163,8 @@ function createGraph(graph) {
     link = link.enter().append("line")
         .attr("class", "link")
       .merge(link)
-      .attr("id", getLinkId)
+      .attr("value", getLinkId)
+      .attr("id", function(d) { return graph_id+"_"+getLinkId(d); })
       .classed("selected", false)
       .attr("stroke-width", function(d) { return d["value"] / max_value * 6 + 1.0; });
 
@@ -162,8 +173,8 @@ function createGraph(graph) {
     // Restart with some alpha so that new nodes/links move. 
     simulation.alpha(0.1).restart();
 
-    $("g.node.selected").each(function(i) {
-      select_node($("g.node#"+$(this)[i].id)[0]);
+    $("g.node.selected").each(function() {
+      select_node($(this).attr("value"));
     });
 
     // Zoom logic
@@ -180,10 +191,13 @@ function createGraph(graph) {
         g.attr("transform", d3.event.transform)
     }
   }  
+  
+  this.select_node = function(value) {
+    this.unselect_nodes();
 
-  function select_node(node) {
+    let node = $("g.node#"+graph_id+"_"+value);
     let id = node.id;
-    let idx = findNode(id);
+    let idx = findNode(value);
     if (idx == -1) return;
     let data = graph.nodes[idx];
 
@@ -194,44 +208,31 @@ function createGraph(graph) {
       if (graph.links[i].source === data) other_node = graph.links[i].target;
       // Add appropriate classes to adjacent nodes and edges.
       if (other_node !== data) {
-	let node_e = $("g.node#"+other_node.id);
+	      let node_e = $("g.node#"+graph_id+"_"+other_node.id);
         node_e.addClass("adj_selected");
-        $("g.nodes").append(node_e); // Move selected nodes to top of DOM.
-        let link = $("#"+getLinkId(graph.links[i]));
+        $(graph_svg).find("g.nodes").append(node_e); // Move selected nodes to top of DOM.
+        let link = $("#"+graph_id+"_"+getLinkId(graph.links[i]));
         link.addClass("selected");
-        $("g.links").append(link);  // Move selected links to the top.
+        $(graph_svg).find("g.links").append(link);  // Move selected links to the top.
       }
     }
-    $("g.nodes").append($(node)); // Move selected node to top of DOM.
+    $(graph_svg).find("g.nodes").append($(node)); // Move selected node to top of DOM.
+  }
+
+  this.unselect_nodes = function() {
+    $(graph_svg).find("g.node").removeClass("selected").removeClass("adj_selected");
+    $(graph_svg).find(".link").removeClass("selected");
   }
 
   function handle_select_node(d, i, gs) {
     var is_selected = $(gs[i]).hasClass("selected");
-    $(gs).removeClass("selected");
-    $(gs).removeClass("adj_selected");
-    $(".link").removeClass("selected");
+    let value = $(gs[i]).attr("value");
 
     if (!is_selected) {
-      select_node(gs[i]);
-    /*$(gs[i]).addClass("selected");
-    for (let i = 0; i < graph.links.length; i++) {
-      if (graph.links[i].source !== d && graph.links[i].target !== d) continue;
-      let other_node = graph.links[i].source;
-      if (graph.links[i].source == d) other_node = graph.links[i].target;
-      // Add appropriate classes to adjacent nodes and edges.
-      if (other_node !== d) {
-        let node_e = $(gs[other_node.index]);
-        node_e.addClass("adj_selected");
-        $("g.nodes").append(node_e); // Move selected nodes to top of DOM.
-        let link_e = $("#"+graph.links[i].source.id+"-"+graph.links[i].target.id);
-        link_e.addClass("selected");
-        $("g.links").append(link_e);  // Move selected links to the top.
-      }
+      select_node(value);
     }
-    $("g.nodes").append($(gs[i])); // Move selected node to top of DOM.
-    */}
     else {
-      $(gs[i]).removeClass("selected");
+      unselect_nodes();
     }
   }
 
@@ -342,22 +343,155 @@ years.forEach(function(year) {
   $("#year-options").append("<a value=\""+year+"\" class=\"year-btn btn btn-default\">"+year+"</a>");
 });
 
-$(".year-btn").on("click", function() {
-  $(".year-btn").removeClass("btn-selected");
-  $(this).addClass("btn-selected");
-  let year = $(this).attr("value");
-  updateGraph(graph, convert_data(parseInt(year)));
+var year_panes = {};
+var selected_years = [];
+// Currently, changing this to > 3 will break things. Sorry!
+const max_years = 3;
+
+var graphs = [];
+
+function select_node(value) {
+  for (let i = 0; i < graphs.length; i++) {
+    graphs[i].select_node(value);
+  }
+}
+function unselect_nodes() {
+  for (let i = 0; i < graphs.length; i++) {
+    graphs[i].unselect_nodes();
+  }
+}
+
+$(".year-btn").on("click", function(e) {
+  let year = parseInt($(this).attr("value"));
+
+  let multiselect = e.ctrlKey;
+  var button_selected = $(this).hasClass("btn-selected");
+  var num_selected = $(".btn-selected").length;
+
+  // TODO: Comment reasoning
+  if (!multiselect) {
+    if (num_selected > 1 || !button_selected) {
+      select_year(year, multiselect)
+    } else if (button_selected) {
+      unselect_year(year, multiselect);
+    }
+  } else {
+    if (!button_selected) { // Button was just selected.
+      select_year(year, multiselect);
+    } else {
+      unselect_year(year, multiselect);
+    }
+  }
+  update_panes();
 });
 
-// Initialize graph.
+function assign_pane(year) {
+  if (year_panes[year] !== undefined)
+    return year_panes[year];
+
+  var i = 0;
+  // Find lowest-indexed pane not in use.
+  for (i = 0; i < max_years; i++) {
+    var in_use = false;
+    for (var index in year_panes) {
+      if (year_panes[index] == i) {
+        in_use = true;
+        break;
+      }
+    }
+    if (!in_use) break;
+  }
+  year_panes[year] = i;
+  return i;
+}
+
+// Adjust width of visible panes.
+function update_panes() {
+  $(".d3-viewport").removeClass("col-sm-4");
+  $(".d3-viewport").removeClass("col-sm-6");
+  $(".d3-viewport").removeClass("col-sm-12");
+  $(".d3-viewport").addClass("hidden");
+  let class_to_add;
+  if (selected_years.length == 3) {
+    class_to_add = "col-sm-4";
+  } else if (selected_years.length == 2) {
+    class_to_add = "col-sm-6";
+  } else if (selected_years.length <= 1) {
+    class_to_add = "col-sm-12";
+  }
+  for (var i = 0; i < selected_years.length; i++) {
+    let v = year_panes[selected_years[i]];
+    let pane_viewport = $(".d3-viewport[value='"+v+"']");
+    pane_viewport.addClass(class_to_add);
+    pane_viewport.removeClass("hidden");
+  }
+  let sorted_years = selected_years.slice().sort();
+  for (var i = 0; i < sorted_years.length; i++) {
+    let v = year_panes[sorted_years[i]];
+    let pane_viewport = $(".d3-viewport[value='"+v+"']");
+    graphs[v].updateViewport();
+    $("#viewport-container").append(pane_viewport);
+  }
+}
+
+function unselect_year(year, multiselect) {
+  let element = $(".year-btn[value='"+year+"']");
+  $(element).removeClass("btn-selected");
+  delete year_panes[year];
+  selected_years.splice(selected_years.indexOf(year), 1);
+}
+
+function select_year(year, multiselect) {
+  year = parseInt(year);
+  let element = $(".year-btn[value='"+year+"']")[0];
+
+  $(element).addClass("btn-selected");
+
+  let scroll_height = $("#year-options")[0].offsetHeight;
+  let element_height = element.offsetHeight;
+  let element_pos = $(element).position().top;
+  // Element not currently visible. We want to make it visible.
+  if (element_pos + element_height < 0 || element_pos > scroll_height) {
+    let amount_to_scroll = element_pos - (scroll_height / 2) + element_height;
+    $("#year-options")[0].scrollTop += amount_to_scroll;
+  }
+
+  if (selected_years.indexOf(year) == -1)
+    selected_years.push(year);
+
+  if (multiselect) {
+    // If max number of years have been selected, replace one of the old
+    // selected years with this new one.
+    if (selected_years.length > max_years) {
+      unselect_year(selected_years[0], multiselect);
+    }
+  } 
+  else { // If not multiselect, remove all other years.
+    let years_to_remove = selected_years.slice();
+    years_to_remove.splice(selected_years.indexOf(year),1);
+    for (let i = 0; i < years_to_remove.length; i++) {
+      unselect_year(years_to_remove[i], multiselect);
+    }
+  }
+
+  let pane_number = assign_pane(year);
+  if (graphs.length <= pane_number) {
+    graphs.push(new createGraph(convert_data(year), pane_number));
+    update_panes();
+  } else {
+    update_panes();
+    updateGraph(graphs[pane_number], convert_data(year));
+  }
+  graphs[pane_number].updateYearLabel(year);
+}
+
+// Initialize visualization.
 let init_year = years[Math.floor(years.length / 2)];
-$(".year-btn[value='"+init_year+"']").addClass("btn-selected");
-var graph = new createGraph(convert_data(init_year));
+select_year(init_year, false);
 
 // Raw Data Show/Hide
 $("#show-data").on("click", function(d) {
   if ($("#raw-data").hasClass("hidden")) {
-    console.log(this);
     $(this).text("Hide Raw Data");
     $("#raw-data").removeClass("hidden");
   } else {
