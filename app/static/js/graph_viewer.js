@@ -29,13 +29,22 @@ function createGraph(graph, graph_id) {
   }
 
   var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+  colorScale.domain([0,1,2,3,4,5,6,7,8,9]);
+
   var groupIndex = {};
-  for (var i = 0; i < graph.nodes.length; i++) {
-    let node = graph.nodes[i];
+  var sortedNodes = graph.nodes.slice();
+  sortedNodes.sort(function(a, b) {
+      if (a.group === b.group) return 0;
+      else if (a.group < b.group) return -1;
+      return 1;
+  });
+
+  for (var i = 0; i < sortedNodes.length; i++) {
+    let node = sortedNodes[i];
     if (groupIndex[node.group] === undefined) 
       groupIndex[node.group] = Object.keys(groupIndex).length;
   }
-  
+
   var simulation = d3.forceSimulation()
     .force("link", d3.forceLink()
       .id(function(d) { return d.id; }))
