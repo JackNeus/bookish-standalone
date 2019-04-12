@@ -1,4 +1,9 @@
 {% extends 'bootstrap/base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% macro render_field(field, disabled = false) %}
+    {{ wtf.form_field(field) }}
+{% endmacro %}
 
 {% block title %}
 	{% if title %} {{title}} - Bookish {% else %} Bookish {% endif %}

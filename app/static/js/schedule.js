@@ -16,6 +16,12 @@ var parameter_names = {
 	"top_bigrams": ["Input Task"],
 	"word_families": ["Input Task", "Word Families"]
 };
+var placeholders = {
+	"ucsf_api_aggregate": {},
+	"ngram": {"param2":"apple orange banana"},
+	"top_bigrams": {},
+	"word_families": {"param2":"apple,orange;berry;banana,plantain"}
+}
 
 var render_paramters = function(obj) {
 	let task = $("#task_name").val();
@@ -31,14 +37,19 @@ var render_paramters = function(obj) {
 		field.hide();
 	}
 	for (let i = 0; i < task_params.length; i++) {
-		let task_param = task_params[i];
-		let field_label = $('.control-label[for="'+task_param+'"]');
-		field_label.text(parameter_names[task][i]);
-		field_label.show();
-		let task_field = $('#'+task_param);
-		task_field.show();
+	    let task_param = task_params[i];
+	    let field_label = $('.control-label[for="'+task_param+'"]');
+	    field_label.text(parameter_names[task][i]);
+	    field_label.show();
+	    let task_field = $('#'+task_param);
+	    let placeholder = placeholders[task][task_param];
+	    if (placeholder === undefined) placeholder = "";
+	    task_field.attr("placeholder", placeholder);
+	    task_field.show();
 	}
 }
+
+
 
 $("#task_name").change(function(){
 	console.log($(this).val());
