@@ -3,6 +3,9 @@
 {% block scripts %}
 	{{ super() }}
   <script type="text/javascript" src="/static/js/jobs.js"></script>		
+	<script type="text/javascript">
+		updateData({{ jobs | safe}});
+	</script>
 {% endblock %}
 
 {% block app_content %}
@@ -34,7 +37,9 @@
 					<td class="time-started">{{ jobs[i].time_started }}</td>
 					<td class="time-finished">{{ jobs[i].time_finished }}</td>
 					<td class="task-progress">{{ jobs[i].progress }}</td>
-					<td class="description">{{ jobs[i].description }}</td>
+					<td class="description" title="{{jobs[i].description}}">
+						{{ jobs[i].description[:[150, jobs[i].description|length]|max] }}
+					</td>
 					<td class="action">
 						{% if jobs[i].status in ["Queued", "Running"] %}
 							<a href="jobs/kill/{{jobs[i].id}}">Abort Job</a>
