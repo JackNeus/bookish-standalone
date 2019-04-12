@@ -60,15 +60,17 @@ def kill(id):
 		flash("Failed to cancel job. Job may still be running.")
 	return redirect(url_for("jobs.jobs_index"))
 
-@bp.route('jobs/delete/<id>')
+@bp.route('jobs/delete/<ids>')
 @login_required
-def delete(id):
-	# TODO: Prevent users from cancelling each other's jobs
-	job = controller.get_job_entry(id)
-	if job is None:
-		flash("Job does not exist.")
-	if not controller.delete_job(id):
-		flash("Failed to delete job.")
+def delete(ids):
+	ids = ids.split(";");
+	for id in ids:
+		# TODO: Prevent users from cancelling each other's jobs
+		job = controller.get_job_entry(id)
+		if job is None:
+			flash("Job does not exist.")
+		if not controller.delete_job(id):
+			flash("Failed to delete job.")
 	return redirect(url_for("jobs.jobs_index"))
 
 @bp.route('jobs/replay/<id>')
