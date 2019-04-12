@@ -42,7 +42,10 @@
 							<a href="jobs/delete/{{jobs[i].id}}">Delete Job</a>
 						{% endif %}
 					</td>
-					<td><a href="jobs/replay/{{jobs[i].id}}">Replay</a></td>
+					<td class="replay">
+						{% if jobs[i].status not in ["Queued", "Running"] %}
+							<a href="jobs/replay/{{jobs[i].id}}">Replay</a></td>
+						{% endif %}
 				</tr>
 			{% endfor %}
 		</tbody>

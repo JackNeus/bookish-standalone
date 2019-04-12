@@ -20,6 +20,7 @@ setInterval(function() {
 				job_table_row.find("td.action").html("<a href='jobs/kill/"+job.id+"'>Abort Job</a>");
 			} else {
 				job_table_row.find("td.action").html("<a href='jobs/delete/"+job.id+"'>Delete Job</a>");
+				job_table_row.find("td.replay").html("<a href='jobs/replay/"+job.id+"'>Replay</a>");
 			}
 				
 		}
