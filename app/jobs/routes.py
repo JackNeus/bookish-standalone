@@ -102,22 +102,24 @@ def replay(id):
 def view(ids):
 	ids = ids.split(";")
 	results = {}
+	single_entry = None
 	for id in ids:
 		job = controller.get_job_entry(id)
 		if job is None:
 			flash("Job does not exist.")
 			return redirect(url_for("jobs.jobs_index"))
 		results[job.name] = controller.get_job_results(id);
+		single_entry = job.name
 
 	# TODO: Support multivis for all tasks.
 	if job.task == "word_freq_task":
-		return render_template("jobs/ngram_viewer.html", data = results[ids[0]])
+		return render_template("jobs/ngram_viewer.html", data = results[single_entry])
 	elif job.task == "top_bigrams_task":
-		return render_template("jobs/graph_viewer.html", vis_name="bigram", data = results[ids[0]])
+		return render_template("jobs/graph_viewer.html", vis_name="bigram", data = results[single_entry])
 	elif job.task == "word_family_graph_task":
 		for id in results:
 			results[id] = results[id].strip().split("\n")
 		return render_template("jobs/graph_viewer.html", vis_name="wordfam", data = json.dumps(results))
 	else:
-		return render_template("jobs/default_viewer.html", data = results)
+		return render_template("jobs/default_viewer.html", data = results[single_entry])
 	return redirect(url_for("jobs.jobs_index"))
