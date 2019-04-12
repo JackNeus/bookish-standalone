@@ -1,5 +1,9 @@
 {% extends 'bootstrap/base.html' %}
 
+{% macro render_field(field, disabled = false) %}
+	{{ field(disabled = disabled) }}
+{% endmacro %}
+
 {% block title %}
 	{% if title %} {{title}} - Bookish {% else %} Bookish {% endif %}
 {% endblock %}

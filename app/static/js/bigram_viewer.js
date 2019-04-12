@@ -30,6 +30,9 @@ updateGraph(graph, task_results);
 //render_chart(task_results);
 
 */
+var is_multi_result = function() {
+  return false;
+}
 
 var get_data_years = function() {
   var years = [];
