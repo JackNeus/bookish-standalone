@@ -38,7 +38,7 @@
 					<td class="time-finished">{{ jobs[i].time_finished }}</td>
 					<td class="task-progress">{{ jobs[i].progress }}</td>
 					<td class="description" title="{{jobs[i].description}}">
-						{{ jobs[i].description[:[150, jobs[i].description|length]|max] }}
+						{{ jobs[i].description[:[150, jobs[i].description|length]|min] }}
 					</td>
 					<td class="action">
 						{% if jobs[i].status in ["Queued", "Running"] %}
