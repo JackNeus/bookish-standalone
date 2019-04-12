@@ -14,7 +14,13 @@ var parameter_names = {
 	"ucsf_api_aggregate": ["Query"],
 	"ngram": ["Input Task", "Keywords (space separated)"],
 	"top_bigrams": ["Input Task"],
-	"word_families": ["Input Task", "Word Families"]
+	"word_families": ["Input Task", "Word Families (comma separated, semicolon separated)"]
+};
+var parameter_placeholders = {
+	"ucsf_api_aggregate": {"param1": "author=glantz&type=report"},
+	"ngram": {},
+	"top_bigrams": {},
+	"word_families": {"param2": "a,b,c;d,e;f"}
 };
 
 var render_paramters = function(obj) {
@@ -36,6 +42,9 @@ var render_paramters = function(obj) {
 		field_label.text(parameter_names[task][i]);
 		field_label.show();
 		let task_field = $('#'+task_param);
+		let placeholder = parameter_placeholders[task][task_param];
+		if (placeholder === undefined) placeholder = "";
+		task_field.attr("placeholder", placeholder);
 		task_field.show();
 	}
 }
