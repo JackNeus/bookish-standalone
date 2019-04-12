@@ -4,6 +4,11 @@ Object.keys(task_results).forEach(function(id) {
   }
 });
 
+var is_multi_result = function() {
+  if (Object.keys(task_results).length > 1) return true;
+  return false;
+}
+
 var get_data_years = function() {
   var years = new Set();
   Object.keys(task_results).forEach(function(id) {
@@ -17,7 +22,12 @@ var get_data_years = function() {
 }
 
 var convert_data = function(year) {
+  // assert(Object.keys(task_results).length == 1)
   var id = Object.keys(task_results)[0];
+  return convert_data_by_id(id, year);
+}
+
+var convert_data_by_id = function(id, year) {
   let raw_data = task_results[id]
   var adj_matrix = raw_data[0][year];
   var node_set = new Set();

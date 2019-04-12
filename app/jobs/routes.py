@@ -101,12 +101,11 @@ def view(ids):
 	ids = ids.split(";")
 	results = {}
 	for id in ids:
-		print(id)
 		job = controller.get_job_entry(id)
 		if job is None:
 			flash("Job does not exist.")
 			return redirect(url_for("jobs.jobs_index"))
-		results[id] = controller.get_job_results(id);
+		results[job.name] = controller.get_job_results(id);
 
 	# TODO: Support multivis for all tasks.
 	if job.task == "word_freq_task":

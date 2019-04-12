@@ -24,7 +24,7 @@ function createGraph(graph, graph_id) {
     svg.attr("viewBox", [-width / 2, -height / 2, width, height]);
   }
 
-  this.updateYearLabel = function(year) {
+  this.updateLabel = function(year) {
     $(viewport).find(".year-label").text(year);
   }
 
@@ -355,7 +355,17 @@ years.forEach(function(year) {
 var year_panes = {};
 var selected_years = [];
 // Currently, changing this to > 3 will break things. Sorry!
-const max_years = 3;
+const max_panes = 3;
+
+// If visualizing multiple results, assign panes to each result.
+var result_panes = {};
+if (is_multi_result()) {
+  let pane_num = 0;
+  Object.keys(task_results).forEach(function(id) {
+    if (pane_num >= max_panes) return;
+    result_panes[id] = pane_num++;
+  });
+}
 
 var graphs = [];
 
@@ -376,6 +386,9 @@ $(".year-btn").on("click", function(e) {
   let multiselect = e.ctrlKey;
   var button_selected = $(this).hasClass("btn-selected");
   var num_selected = $(".btn-selected").length;
+
+  // Disable year multiselect if visualizing from multiple results.
+  if (is_multi_result()) multiselect = false;
 
   // TODO: Comment reasoning
   if (!multiselect) {
@@ -400,7 +413,7 @@ function assign_pane(year) {
 
   var i = 0;
   // Find lowest-indexed pane not in use.
-  for (i = 0; i < max_years; i++) {
+  for (i = 0; i < max_panes; i++) {
     var in_use = false;
     for (var index in year_panes) {
       if (year_panes[index] == i) {
@@ -420,23 +433,26 @@ function update_panes() {
   $(".d3-viewport").removeClass("col-sm-6");
   $(".d3-viewport").removeClass("col-sm-12");
   $(".d3-viewport").addClass("hidden");
+
+  let item_list = is_multi_result() ? Object.keys(task_results) : selected_years;
+
   let class_to_add;
-  if (selected_years.length == 3) {
+  if (item_list.length == 3) {
     class_to_add = "col-sm-4";
-  } else if (selected_years.length == 2) {
+  } else if (item_list.length == 2) {
     class_to_add = "col-sm-6";
-  } else if (selected_years.length <= 1) {
+  } else if (item_list.length <= 1) {
     class_to_add = "col-sm-12";
   }
-  for (var i = 0; i < selected_years.length; i++) {
-    let v = year_panes[selected_years[i]];
+  for (var i = 0; i < item_list.length; i++) {
+    let v = is_multi_result() ? result_panes[item_list[i]] : year_panes[item_list[i]];
     let pane_viewport = $(".d3-viewport[value='"+v+"']");
     pane_viewport.addClass(class_to_add);
     pane_viewport.removeClass("hidden");
   }
-  let sorted_years = selected_years.slice().sort();
-  for (var i = 0; i < sorted_years.length; i++) {
-    let v = year_panes[sorted_years[i]];
+  let sorted_items = item_list.slice().sort();
+  for (var i = 0; i < sorted_items.length; i++) {
+    let v = is_multi_result() ? result_panes[item_list[i]] : year_panes[item_list[i]];
     let pane_viewport = $(".d3-viewport[value='"+v+"']");
     graphs[v].updateViewport();
     $("#viewport-container").append(pane_viewport);
@@ -471,7 +487,7 @@ function select_year(year, multiselect) {
   if (multiselect) {
     // If max number of years have been selected, replace one of the old
     // selected years with this new one.
-    if (selected_years.length > max_years) {
+    if (selected_years.length > max_panes) {
       unselect_year(selected_years[0], multiselect);
     }
   } 
@@ -483,15 +499,31 @@ function select_year(year, multiselect) {
     }
   }
 
-  let pane_number = assign_pane(year);
-  if (graphs.length <= pane_number) {
-    graphs.push(new createGraph(convert_data(year), pane_number));
-    update_panes();
+  // Standard year visualization.
+  if (!is_multi_result()) {
+    let pane_number = assign_pane(year);
+    if (graphs.length <= pane_number) {
+      graphs.push(new createGraph(convert_data(year), pane_number));
+      update_panes();
+    } else {
+      update_panes();
+      updateGraph(graphs[pane_number], convert_data(year));
+    }
+    graphs[pane_number].updateLabel(year);
   } else {
+    let result_ids = Object.keys(task_results);
+    for (let i = 0; i < result_ids.length; i++) {
+      let result_id = result_ids[i];
+      let result_pane = result_panes[result_id];
+      if (graphs.length <= result_pane) {
+        graphs.push(new createGraph(convert_data_by_id(result_id, year), result_pane));
+      } else {
+        updateGraph(graphs[result_pane], convert_data(year));
+      }
+      graphs[result_pane].updateLabel(result_id);
+    }
     update_panes();
-    updateGraph(graphs[pane_number], convert_data(year));
   }
-  graphs[pane_number].updateYearLabel(year);
 }
 
 // Initialize visualization.

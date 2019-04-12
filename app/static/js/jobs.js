@@ -26,7 +26,7 @@ setInterval(function() {
 		updateViewLinks();
 		updateRows();
 	});
-}, 150000);
+}, 1500);
 
 function updateRows() {
 	$(".select").on("click", function() {
@@ -42,7 +42,6 @@ function updateViewLinks() {
 	var type_mismatch = false;
 	var selected_rows = $(".select:checked").parent().parent().each(function() {
 		let type = $(this).find(".id").text();
-		console.log(type, task_type);
 		if (task_type === undefined)
 			task_type = type;
 		else if (task_type !== type)
@@ -57,7 +56,7 @@ function updateViewLinks() {
 			// Currently, only support multivisualization of word family.
 			if (task_type !== "word_family_graph_task") return;
 		}
-		
+
 		var url_param = selected_ids.join(";");
 		$(".select:checked").parent().parent().find(".view-results")
 			.html("<a href=\"jobs/view/"+url_param+"\">View Results</a>")
