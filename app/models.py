@@ -61,7 +61,6 @@ class JobEntry(Document):
                 return description
             return ",".join(self.params)
         except Exception as e:
-            raise e
             return "n/a"
 
     def get_progress(self):
@@ -71,7 +70,10 @@ class JobEntry(Document):
                 return "100.00"
             else:
                 return ""
-        progress = job.meta.get('processed', 0) / job.meta.get('size', 1) * 100
+        if job.meta.get('size', 1) == 0:
+            progress = 100
+        else:
+            progress = job.meta.get('processed', 0) / job.meta.get('size', 1) * 100
         return "%.2f" % progress
         
     def update_status(self):

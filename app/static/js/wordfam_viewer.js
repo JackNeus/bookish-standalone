@@ -1,16 +1,25 @@
-for (var i = 0; i < task_results.length; i++)
-  task_results[i] = JSON.parse(task_results[i]);
+Object.keys(task_results).forEach(function(id) {
+  for (var i = 0; i < task_results[id].length; i++) {
+    task_results[id][i] = JSON.parse(task_results[id][i]);
+  }
+});
 
 var get_data_years = function() {
-  var years = [];
-  Object.keys(task_results[0]).forEach(function(year) {
-    years.push(parseInt(year));
+  var years = new Set();
+  Object.keys(task_results).forEach(function(id) {
+    Object.keys(task_results[id][0]).forEach(function(year) {
+      years.add(parseInt(year));
+    });
   });
+  years = Array.from(years);
+  years.sort();
   return years;
 }
 
 var convert_data = function(year) {
-  var adj_matrix = task_results[0][year];
+  var id = Object.keys(task_results)[0];
+  let raw_data = task_results[id]
+  var adj_matrix = raw_data[0][year];
   var node_set = new Set();
   var links = [];
 
@@ -37,9 +46,9 @@ var convert_data = function(year) {
   // Convert text labels of node groups to numbers for 
   // coloring purposes.
   var node_groups = {}
-  for (var group in task_results[2]) {
-    for (var j = 0; j < task_results[2][group].length; j++) {
-      node_groups[task_results[2][group][j]] = group;
+  for (var group in raw_data[2]) {
+    for (var j = 0; j < raw_data[2][group].length; j++) {
+      node_groups[raw_data[2][group][j]] = group;
     }
   }
 
@@ -48,7 +57,7 @@ var convert_data = function(year) {
     nodes.push({
       "id": element,
       "group": node_groups[element],
-      "value": task_results[1][year][element]
+      "value": raw_data[1][year][element]
     });
   });
   return {"nodes": nodes, "links": links};

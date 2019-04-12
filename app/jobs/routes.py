@@ -95,21 +95,27 @@ def replay(id):
 		return redirect(url_for("jobs.jobs_index"))
 	return redirect(url_for("jobs.jobs_index"))
 
-@bp.route('jobs/view/<id>')
+@bp.route('jobs/view/<ids>')
 @login_required
-def view(id):
-	job = controller.get_job_entry(id)
-	if job is None:
-		flash("Job does not exist.")
-		return redirect(url_for("jobs.jobs_index"))
+def view(ids):
+	ids = ids.split(";")
+	results = {}
+	for id in ids:
+		print(id)
+		job = controller.get_job_entry(id)
+		if job is None:
+			flash("Job does not exist.")
+			return redirect(url_for("jobs.jobs_index"))
+		results[id] = controller.get_job_results(id);
 
-	results = controller.get_job_results(id)
+	# TODO: Support multivis for all tasks.
 	if job.task == "word_freq_task":
-		return render_template("jobs/ngram_viewer.html", data = results)
+		return render_template("jobs/ngram_viewer.html", data = results[ids[0]])
 	elif job.task == "top_bigrams_task":
-		return render_template("jobs/graph_viewer.html", vis_name="bigram", data = results)
+		return render_template("jobs/graph_viewer.html", vis_name="bigram", data = results[ids[0]])
 	elif job.task == "word_family_graph_task":
-		results = results.strip().split("\n")
+		for id in results:
+			results[id] = results[id].strip().split("\n")
 		return render_template("jobs/graph_viewer.html", vis_name="wordfam", data = json.dumps(results))
 	else:
 		return render_template("jobs/default_viewer.html", data = results)
