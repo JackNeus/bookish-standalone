@@ -61,7 +61,6 @@ class JobEntry(Document):
                 return description
             return ",".join(self.params)
         except Exception as e:
-            raise e
             return "n/a"
 
     def get_progress(self):
