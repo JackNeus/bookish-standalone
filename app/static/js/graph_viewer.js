@@ -452,7 +452,7 @@ function update_panes() {
   }
   let sorted_items = item_list.slice().sort();
   for (var i = 0; i < sorted_items.length; i++) {
-    let v = is_multi_result() ? result_panes[item_list[i]] : year_panes[item_list[i]];
+    let v = is_multi_result() ? result_panes[sorted_items[i]] : year_panes[sorted_items[i]];
     let pane_viewport = $(".d3-viewport[value='"+v+"']");
     graphs[v].updateViewport();
     $("#viewport-container").append(pane_viewport);
