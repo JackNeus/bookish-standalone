@@ -91,7 +91,7 @@ def partition_map(map_func, items, size_func = lambda *a: 1, max_partition_size 
 # associated with a year.
 def get_file_list(file_list_path, include_without_year = False):
     # Make sure file_list_path is a valid task ID.
-    if file_list_path not in ["dummy"] and get_job_entry(file_list_path) is None:
+    if file_list_path not in ["dummy", "dummy2"] and get_job_entry(file_list_path) is None:
         return None
 
     file_list_file = open(config["TASK_RESULT_PATH"] + file_list_path)

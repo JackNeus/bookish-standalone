@@ -146,7 +146,6 @@ def get_job_results(id, truncate = True):
         return "Results could not be found."
 
 def get_seed_jobs():
-    print(current_user)
     if not current_user:
         return []
 
