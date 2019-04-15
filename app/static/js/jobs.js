@@ -83,12 +83,12 @@ function updateLinks() {
 	} else {
 		$("tr").each(function() {
 			var id = $(this)[0].id;
+			var status = $(this).find(".status").text();
 			if (status === "Completed") {
 				$(this).find(".view-results")
 					.html("<a href=\"jobs/view/"+id+"\">View Results</a>")
 			}
 
-			var status = $(this).find(".status").text();
 			if (status === "Queued" || status === "Running") {
 				$(this).find(".action")
 					.html("<a href=\"jobs/kill/"+id+"\">Abort Job</a>");
