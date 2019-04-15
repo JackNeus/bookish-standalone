@@ -141,10 +141,10 @@ def get_seed_jobs():
     print(current_user)
     if not current_user:
         return []
-    print(current_user.get_id())
+        
     seed_tasks = ["ucsf_api_aggregate_task"]
     jobs = JobEntry.objects(task__in = seed_tasks, status = "Completed", user_id = current_user.get_id())
     jobs = list(map(lambda x: (x.id, "%s (%s)" % (x.name, x.task)), jobs))
-    jobs.append(("dummy", "dummy job (all local files)"))
-    print(jobs)
+    if current_app.config["DEBUG"]:
+        jobs.append(("dummy", "dummy job (all local files)"))
     return jobs
