@@ -1,4 +1,5 @@
 import datetime
+from dateutil import tz
 import json
 import os
 import rq
@@ -31,16 +32,23 @@ def get_rq_job(id):
     return job
 
 def get_user_jobs(user_id):
-    return JobEntry.objects(user_id = user_id).order_by("time_created", "time_started", "time_finished")
+    jobs = JobEntry.objects(user_id = user_id).order_by("time_created", "time_started", "time_finished")
+    return jobs
 
 def get_user_jobs_json(user_id):
     def job_entry_to_json(job_entry):
+        eastern_time = tz.gettz('America/New_York')
         time_started = ""
         if job_entry.time_started:
-            time_started = datetime.date.strftime(job_entry.time_started, "%c")
+            time_started = job_entry.time_started.replace(tzinfo=tz.tzutc())
+            time_started = time_started.astimezone(eastern_time)
+            time_started = datetime.date.strftime(time_started, "%c")
         time_finished = ""
         if job_entry.time_finished:
-            time_finished = datetime.date.strftime(job_entry.time_finished, "%c")
+            time_finished = job_entry.time_finished.replace(tzinfo=tz.tzutc())
+            time_finished = time_finished.astimezone(eastern_time)
+            time_finished = datetime.date.strftime(time_finished, "%c")
+        
         job = {
             "id": job_entry.id,
             "name": job_entry.name,
