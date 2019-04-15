@@ -100,15 +100,23 @@ def replay(id):
 @bp.route('jobs/view/<ids>')
 @login_required
 def view(ids):
+	no_truncate_tasks = ["top_bigrams_task", "word_family_graph_task"]
+
 	ids = ids.split(";")
 	results = {}
 	single_entry = None
+	task = None
 	for id in ids:
 		job = controller.get_job_entry(id)
 		if job is None:
-			flash("Job does not exist.")
+			flash("Task does not exist.")
 			return redirect(url_for("jobs.jobs_index"))
-		results[job.name] = controller.get_job_results(id);
+		if task is not None and task != job.task:
+			flash("Cannot return results for tasks of multiple types.")
+			return redirect(url_for("jobs.jobs_index"))
+		task = job.task
+
+		results[job.name] = controller.get_job_results(id, task not in no_truncate_tasks);
 		single_entry = job.name
 
 	# TODO: Support multivis for all tasks.

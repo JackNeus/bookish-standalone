@@ -102,7 +102,7 @@ def delete_job(id):
 
     return True
 
-def get_job_results(id):
+def get_job_results(id, truncate = True):
     job = get_job_entry(id)
     if not job:
         return None
@@ -110,12 +110,17 @@ def get_job_results(id):
         filename = current_app.config["TASK_RESULT_PATH"] + id
         f = open(filename)
         file_size = os.path.getsize(filename)
-        # Read at most ~500K
+        read_size = file_size
         max_file_size = 500000
-        data = f.read(min(file_size, max_file_size))
+        if truncate: 
+            # Read at most ~500K
+            read_size = min(read_size, max_file_size)
+        data = f.read(read_size)
+        
         # If data was truncated
-        if file_size > max_file_size:
+        if file_size > read_size:
             data += "[truncated]\n"
+ 
         f.close()
         return data
     except FileNotFoundError:
