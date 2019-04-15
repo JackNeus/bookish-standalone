@@ -40,8 +40,7 @@ var unuse_color = function(color) {
 var generate_labels = function() {
 	let labels = [];
 	for (var i = x_min; i <= x_max; i++) {
-		if (i % 2 == 0) labels.push(i);	
-		else labels.push("");
+		labels.push(i);	
 	}
 	return labels;
 }
@@ -55,7 +54,8 @@ var init_chart = function() {
 	    type: 'line',
 	    data: chart_data,
 	    options: {
-		    responsive: false,
+		    responsive: true,
+		    maintainAspectRatio: false,
 		    scales: {
 		    	yAxes: [{
 		    		ticks: {
@@ -115,6 +115,15 @@ var has_dataset = function(label) {
 	}
 	return false;
 }
+
+function adjust_canvas() {
+	let canvas = $("#chart")[0];
+	canvas.style.width = "100%";
+	canvas.style.height = "100%";
+	canvas.width = canvas.offsetWidth;
+	canvas.height = canvas.offsetHeight;
+}
+//adjust_canvas();
 
 init_chart();
 for (var index in task_results) {
