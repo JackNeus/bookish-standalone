@@ -142,7 +142,7 @@ function adjust_canvas() {
 
 init_chart();
 var task_name = Object.keys(task_results)[0];
-console.log(task_results)
+
 if (typeof task_results[task_name] === "string") {
 	task_results[task_name] = [JSON.parse(task_results[task_name])];
 } else {
@@ -158,7 +158,6 @@ for (var index in task_data[0]) {
 // Raw Data Show/Hide
 $("#show-data").on("click", function(d) {
   if ($("#raw-data").hasClass("hidden")) {
-    console.log(this);
     $(this).text("Hide Raw Data");
     $("#raw-data").removeClass("hidden");
   } else {
