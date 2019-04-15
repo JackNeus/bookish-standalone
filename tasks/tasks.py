@@ -265,12 +265,15 @@ def get_word_family_graph(file_list, word_families, in_app = True):
     empty_fcm = defaultdict(lambda: copy.deepcopy(defaultdict(lambda: 0)))
     fcms = init_dict(years, empty_fcm)
     word_freqs = init_dict(years, defaultdict(lambda: 0, []))
+    metadata = init_dict(years, defaultdict(lambda: 0, []))
 
     # Merge fcms by year.
     for entry in word_family_data:
         if entry is None:
             continue
-        year, file_fcm, file_word_freqs = entry
+        year, file_fcm, file_word_freqs, word_count = entry
+        metadata[year]["Files Analyzed"] += 1 
+        metadata[year]["Total Word Count"] += word_count
         for keyword in file_fcm:
             word_freqs[year][keyword] += file_word_freqs[keyword]
             for word, gfreq in file_fcm[keyword].items():
@@ -279,9 +282,11 @@ def get_word_family_graph(file_list, word_families, in_app = True):
     # Convert from defaultdicts to dicts.
     fcms = dict(fcms)
     word_freqs = dict(word_freqs)
+    metadata = dict(metadata)
     for year in fcms:
         word_freqs[year] = dict(word_freqs[year])
         fcms[year] = dict(fcms[year])
+        metadata[year] = dict(metadata[year])
         for keyword in fcms[year]:
             fcms[year][keyword] = dict(fcms[year][keyword])
 
@@ -310,7 +315,7 @@ def get_word_family_graph(file_list, word_families, in_app = True):
                 for word, val in fcms[year][keyword].items():
                     fcms[year][keyword][word] = val / max_edge_val
 
-    return [fcms, word_freqs, word_families]
+    return [fcms, word_freqs, word_families, metadata]
 
 def get_word_family_data(file_data, keywords, in_app = True):
     filename, fileyear = file_data
@@ -351,4 +356,4 @@ def get_word_family_data(file_data, keywords, in_app = True):
     if in_app:
         inc_task_processed()
         push_metadata_to_db("files_analyzed")
-    return (fileyear, fcm, word_freq)
+    return (fileyear, fcm, word_freq, len(file))

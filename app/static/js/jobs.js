@@ -70,7 +70,9 @@ function updateLinks() {
 	if (selected_ids.length > 0) {
 		var url_param = selected_ids.join(";");
 
-		if (valid_vis && (selected_ids.length == 1 || task_type === "word_family_graph_task")) {
+		if (valid_vis && (selected_ids.length == 1 || 
+				selected_ids.length <= 3 && (task_type === "word_family_graph_task" || 
+				task_type === "top_bigrams_task"))) {
 			// Currently, only support multivisualization of word family.
 			$(".select:checked").parent().parent().find(".view-results")
 				.html("<a href=\"jobs/view/"+url_param+"\">View Results</a>")

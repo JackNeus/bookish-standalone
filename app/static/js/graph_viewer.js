@@ -28,6 +28,14 @@ function createGraph(graph, graph_id) {
     $(viewport).find(".year-label").text(year);
   }
 
+  this.updateMetadata = function(metadata) {
+    if (metadata === undefined) return;
+    let text = Object.keys(metadata).map(function(key) {
+      return key + ": " + metadata[key];
+    }).join("<br />");
+    $(viewport).find(".metadata").html(text);
+  }
+
   var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
   colorScale.domain([0,1,2,3,4,5,6,7,8,9]);
 
@@ -502,25 +510,31 @@ function select_year(year, multiselect) {
   // Standard year visualization.
   if (!is_multi_result()) {
     let pane_number = assign_pane(year);
+    let data = convert_data(year);
     if (graphs.length <= pane_number) {
-      graphs.push(new createGraph(convert_data(year), pane_number));
+      graphs.push(new createGraph(data, pane_number));
       update_panes();
     } else {
       update_panes();
-      updateGraph(graphs[pane_number], convert_data(year));
+      updateGraph(graphs[pane_number], data);
     }
     graphs[pane_number].updateLabel(year);
+    if (data["metadata"] !== undefined)
+      graphs[pane_number].updateMetadata(data["metadata"][year]);
   } else {
     let result_ids = Object.keys(task_results);
     for (let i = 0; i < result_ids.length; i++) {
       let result_id = result_ids[i];
       let result_pane = result_panes[result_id];
+      let result_data = convert_data_by_id(result_id, year);
       if (graphs.length <= result_pane) {
-        graphs.push(new createGraph(convert_data_by_id(result_id, year), result_pane));
+        graphs.push(new createGraph(result_data, result_pane));
       } else {
-        updateGraph(graphs[result_pane], convert_data(year));
+        updateGraph(graphs[result_pane], result_data);
       }
       graphs[result_pane].updateLabel(result_id);
+      if (result_data["metadata"] !== undefined)
+        graphs[result_pane].updateMetadata(result_data["metadata"][year]);
     }
     update_panes();
   }

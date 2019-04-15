@@ -123,7 +123,7 @@ def view(ids):
 	if job.task == "word_freq_task":
 		return render_template("jobs/ngram_viewer.html", data = results[single_entry])
 	elif job.task == "top_bigrams_task":
-		return render_template("jobs/graph_viewer.html", vis_name="bigram", data = results[single_entry])
+		return render_template("jobs/graph_viewer.html", vis_name="bigram", data = json.dumps(results))
 	elif job.task == "word_family_graph_task":
 		for id in results:
 			results[id] = results[id].strip().split("\n")

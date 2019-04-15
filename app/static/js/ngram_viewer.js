@@ -7,24 +7,24 @@ var x_max = 0;
 
 var free_colors = new Set([
 "#1f77b4",
-"#aec7e8",
 "#ff7f0e",
-"#ffbb78",
 "#2ca02c",
-"#98df8a",
 "#d62728",
-"#ff9896",
 "#9467bd",
-"#c5b0d5",
 "#8c564b",
-"#c49c94",
 "#e377c2",
-"#f7b6d2",
 "#7f7f7f",
-"#c7c7c7",
 "#bcbd22",
-"#dbdb8d",
 "#17becf",
+"#aec7e8",
+"#ffbb78",
+"#98df8a",
+"#ff9896",
+"#c5b0d5",
+"#c49c94",
+"#f7b6d2",
+"#c7c7c7",
+"#dbdb8d",
 "#9edae5"]);
 var used_colors = new Set();
 

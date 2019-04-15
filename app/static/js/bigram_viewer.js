@@ -30,20 +30,34 @@ updateGraph(graph, task_results);
 //render_chart(task_results);
 
 */
+Object.keys(task_results).forEach(function(id) {
+  task_results[id] = JSON.parse(task_results[id]);
+});
+
 var is_multi_result = function() {
+  if (Object.keys(task_results).length > 1) return true;
   return false;
 }
 
 var get_data_years = function() {
-  var years = [];
-  Object.keys(task_results).forEach(function(year) {
-    years.push(parseInt(year));
+  var years = new Set();
+  Object.keys(task_results).forEach(function(id) {
+    Object.keys(task_results[id]).forEach(function(year) {
+      years.add(parseInt(year));
+    });
   });
+  years = Array.from(years);
+  years.sort();
   return years;
 }
 
 var convert_data = function(year) {
-  var data = task_results[year];
+  let id = Object.keys(task_results)[0];
+  return convert_data_by_id(id, year);
+}
+
+var convert_data_by_id = function(id, year) {
+  var data = task_results[id][year];
   
   var node_set = new Set([]);
   var links = [];
@@ -67,3 +81,6 @@ var convert_data = function(year) {
   return {"nodes": nodes, "links": links};
 }
 
+if (!is_multi_result()) {
+  $("#task-info").text(Object.keys(task_results)[0]);
+}

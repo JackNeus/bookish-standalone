@@ -29,6 +29,13 @@ body {
   height: calc(90%);
 }
 
+#task-info {
+  width: 100%;
+  text-align: center;
+  font-size: 1.5em;
+  padding-bottom: 15px;
+}
+
 .vis-row {
   height: 600px;
   padding: 10px;
@@ -70,6 +77,12 @@ body {
       .year-label {
         font-size: 1.5em;
         text-align: center;
+      }
+
+      .metadata {
+        width: 30%;
+        height: 15%;
+        float: bottom;
       }
 
       svg {
