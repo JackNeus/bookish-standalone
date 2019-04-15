@@ -1,4 +1,5 @@
 import datetime
+from dateutil import tz
 import json
 import os
 import rq
@@ -11,6 +12,7 @@ from tasks.worker import BookishJob
 
 from app.models import JobEntry
 from tasks import tasks
+from tasks.util import set_task_status
 
 
 def get_job_entry(id):
@@ -30,16 +32,23 @@ def get_rq_job(id):
     return job
 
 def get_user_jobs(user_id):
-    return JobEntry.objects(user_id = user_id).order_by("time_created", "time_started", "time_finished")
+    jobs = JobEntry.objects(user_id = user_id).order_by("time_created", "time_started", "time_finished")
+    return jobs
 
 def get_user_jobs_json(user_id):
     def job_entry_to_json(job_entry):
+        eastern_time = tz.gettz('America/New_York')
         time_started = ""
         if job_entry.time_started:
-            time_started = datetime.date.strftime(job_entry.time_started, "%c")
+            time_started = job_entry.time_started.replace(tzinfo=tz.tzutc())
+            time_started = time_started.astimezone(eastern_time)
+            time_started = datetime.date.strftime(time_started, "%c")
         time_finished = ""
         if job_entry.time_finished:
-            time_finished = datetime.date.strftime(job_entry.time_finished, "%c")
+            time_finished = job_entry.time_finished.replace(tzinfo=tz.tzutc())
+            time_finished = time_finished.astimezone(eastern_time)
+            time_finished = datetime.date.strftime(time_finished, "%c")
+        
         job = {
             "id": job_entry.id,
             "name": job_entry.name,
@@ -72,16 +81,26 @@ def schedule_job(task, params, name = None):
 
 def kill_job(id):
     job = get_rq_job(id)
-    print("Job: ", job)
+
     if job is None:
         return False
-        
-    try:
-        job.kill()
+    job_entry = get_job_entry(id)
+    job_status = job_entry.get_status()
+
+    if job_status == "Running":
+        try:
+            job.kill()
+            return True
+        except Exception as e:
+            return False
+    elif job_status == "Queued":
+        current_app.task_queue.remove(job)
+        job_entry.status = "Aborted"
+        job_entry.save()
         return True
-    except Exception as e:
-        raise e
+    else:
         return False
+
 
 def delete_job(id):
     job = get_job_entry(id)
@@ -102,7 +121,7 @@ def delete_job(id):
 
     return True
 
-def get_job_results(id):
+def get_job_results(id, truncate = True):
     job = get_job_entry(id)
     if not job:
         return None
@@ -110,12 +129,17 @@ def get_job_results(id):
         filename = current_app.config["TASK_RESULT_PATH"] + id
         f = open(filename)
         file_size = os.path.getsize(filename)
-        # Read at most ~500K
+        read_size = file_size
         max_file_size = 500000
-        data = f.read(min(file_size, max_file_size))
+        if truncate: 
+            # Read at most ~500K
+            read_size = min(read_size, max_file_size)
+        data = f.read(read_size)
+        
         # If data was truncated
-        if file_size > max_file_size:
+        if file_size > read_size:
             data += "[truncated]\n"
+ 
         f.close()
         return data
     except FileNotFoundError:
@@ -125,10 +149,11 @@ def get_seed_jobs():
     print(current_user)
     if not current_user:
         return []
-    print(current_user.get_id())
+
     seed_tasks = ["ucsf_api_aggregate_task"]
     jobs = JobEntry.objects(task__in = seed_tasks, status = "Completed", user_id = current_user.get_id())
     jobs = list(map(lambda x: (x.id, "%s (%s)" % (x.name, x.task)), jobs))
-    jobs.append(("dummy", "dummy job (all local files)"))
-    print(jobs)
+    if current_app.config["DEBUG"]:
+        jobs.append(("dummy", "dummy job (all local files, 1900-1909)"))
+        jobs.append(("dummy2", "dummy job (all local files, 1900-1919)"))
     return jobs

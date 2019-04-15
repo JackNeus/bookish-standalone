@@ -3,13 +3,13 @@
 
 {% block scripts %}
 	{{ super() }}
-  <script type="text/javascript" src="/static/js/schedule.js"></script>		
+  <script type="text/javascript" src="/static/js/schedule.js?v=1"></script>		
 {% endblock %}
 
 {% block app_content %}
 <div class="row">
-	<div class="col-md-4">
-		{{ wtf.quick_form(form, id="schedule-form") }}
+	<div class="col-md-6 col-sm-12 hidden" id="form-container">
+		{{ wtf.quick_form(form) }}
 	</div>
 </div>
 {% endblock %}

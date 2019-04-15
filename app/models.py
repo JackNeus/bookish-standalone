@@ -38,7 +38,7 @@ class JobEntry(Document):
     def get_description(self):
         try:
             if self.task == "ucsf_api_aggregate_task":
-                return "%d/%d files found. (%s)" % (self.task_metadata["files_found"], 
+                return "%d/%d files found. (query: %s)" % (self.task_metadata["files_found"], 
                     self.task_metadata["files_count"], ",".join(self.params))
             if self.task in ["word_freq_task", "top_bigrams_task", "word_family_graph_task"]:
                 seed_task_id = self.params[0]
@@ -49,11 +49,11 @@ class JobEntry(Document):
 
                 param_list = ""
                 if self.task == "word_freq_task":
-                    param_list = "(%s, %s)" % (seed_task_name, self.params[1])
+                    param_list = "(input: %s, words: %s)" % (seed_task_name, self.params[1])
                 if self.task == "top_bigrams_task":
-                    param_list = "(%s)" % seed_task_name
+                    param_list = "(input: %s)" % seed_task_name
                 if self.task == "word_family_graph_task":
-                    param_list = "(%s, %s)" % (seed_task_name, self.params[1].replace(";", "; "))
+                    param_list = "(input: %s, word families: %s)" % (seed_task_name, self.params[1].replace(";", "; "))
 
                 description = "%d files analyzed. %s" % (self.task_metadata["files_analyzed"], param_list)
                 if self.status != "Completed":

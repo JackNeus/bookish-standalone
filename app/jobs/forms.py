@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import HiddenField, IntegerField, StringField, SubmitField, SelectField
+from wtforms import HiddenField, IntegerField, StringField, SubmitField, SelectField, TextAreaField
 from wtforms.validators import ValidationError, DataRequired, Email, EqualTo
 
 from app.jobs import controllers as controller
@@ -13,10 +13,10 @@ def NonNegative(form, field):
 		raise ValidationError("Field must be non-negative.")
 
 task_list = [
-("ucsf_api_aggregate", "UCSF API Call"), 
-("ngram", "NGram"), 
-("top_bigrams", "Top Bigrams"),
-("word_families", "Word Family Graph")]
+("ucsf_api_aggregate", "UCSF API Call (selection)"), 
+("ngram", "NGram (analysis)"), 
+("top_bigrams", "Top Bigrams (analysis)"),
+("word_families", "Word Family Graph (analysis)")]
 
 class ScheduleForm(FlaskForm):
 	job_name = StringField('Name', validators=[DataRequired()], default="")
@@ -27,7 +27,7 @@ class ScheduleForm(FlaskForm):
 	param1 = StringField('', default="")
 	seed_task = SelectField('Input Task')
 
-	param2 = StringField('', default="")
+	param2 = TextAreaField('', default="")
 
 	submit = SubmitField('Schedule Job')
 

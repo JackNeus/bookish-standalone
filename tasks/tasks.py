@@ -98,7 +98,7 @@ def ucsf_api_aggregate_task(query):
 # Top level task function.
 def word_freq_task(file_list_path, keywords):
     if isinstance(keywords, str):
-        keywords = shlex.split(keywords)
+        keywords = keywords.split(",")
     init_job([file_list_path, " ".join(keywords)])
     file_list = get_file_list(file_list_path)
 
