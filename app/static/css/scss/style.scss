@@ -36,6 +36,14 @@ body {
   padding-bottom: 15px;
 }
 
+.ngram-metadata {
+  padding-bottom: 15px;
+}
+
+#show-data {
+  margin-bottom: 15px;
+}
+
 .vis-row {
   height: 600px;
   padding: 10px;
@@ -82,7 +90,7 @@ body {
       .metadata {
         width: 30%;
         height: 15%;
-        float: bottom;
+        padding-bottom: 15px;
       }
 
       svg {

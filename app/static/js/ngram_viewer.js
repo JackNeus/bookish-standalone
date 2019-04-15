@@ -141,8 +141,18 @@ function adjust_canvas() {
 //adjust_canvas();
 
 init_chart();
-for (var index in task_results) {
-	add_dataset(index, task_results[index])
+var task_name = Object.keys(task_results)[0];
+console.log(task_results)
+if (typeof task_results[task_name] === "string") {
+	task_results[task_name] = [JSON.parse(task_results[task_name])];
+} else {
+	for (var i = 0; i < task_results[task_name].length; i++) {
+		task_results[task_name][i] = JSON.parse(task_results[task_name][i]);
+	}
+}
+var task_data = task_results[task_name];
+for (var index in task_data[0]) {
+	add_dataset(index, task_data[0][index])
 }
 
 // Raw Data Show/Hide
@@ -156,3 +166,15 @@ $("#show-data").on("click", function(d) {
     $("#raw-data").addClass("hidden");
   }
 });
+
+$("#task-info").text(task_name);
+if (task_data.length > 1) {
+	let text = "";
+	for (year in task_data[1]) {
+		let metadata = task_data[1][year];
+	    text += year + ": " + Object.keys(metadata).map(function(key) {
+	      return key + ": " + metadata[key];
+	    }).join(", ") + "<br />";
+	}
+	$(".ngram-metadata").html(text);
+}

@@ -31,7 +31,13 @@ updateGraph(graph, task_results);
 
 */
 Object.keys(task_results).forEach(function(id) {
-  task_results[id] = JSON.parse(task_results[id]);
+  if (typeof task_results[id] == "string") {
+    task_results[id] = [JSON.parse(task_results[id])];
+  } else {
+    for (var i = 0; i < task_results[id].length; i++) {
+      task_results[id][i] = JSON.parse(task_results[id][i]);
+    }
+  }
 });
 
 var is_multi_result = function() {
@@ -42,7 +48,7 @@ var is_multi_result = function() {
 var get_data_years = function() {
   var years = new Set();
   Object.keys(task_results).forEach(function(id) {
-    Object.keys(task_results[id]).forEach(function(year) {
+    Object.keys(task_results[id][0]).forEach(function(year) {
       years.add(parseInt(year));
     });
   });
@@ -57,11 +63,11 @@ var convert_data = function(year) {
 }
 
 var convert_data_by_id = function(id, year) {
-  var data = task_results[id][year];
-  
+  var raw_data = task_results[id];
+
   var node_set = new Set([]);
   var links = [];
-  data.forEach(function(element) {
+  raw_data[0][year].forEach(function(element) {
     node_set.add(element[0][0]);
     node_set.add(element[0][1]);
     links.push({
@@ -78,7 +84,11 @@ var convert_data_by_id = function(id, year) {
       "value": 1
     });
   });
-  return {"nodes": nodes, "links": links};
+  
+  var result = {"nodes": nodes, "links": links, "metadata": {}};
+  if (raw_data.length > 1)
+    result["metadata"] = raw_data[1];
+  return result;
 }
 
 if (!is_multi_result()) {

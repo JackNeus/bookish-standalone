@@ -126,10 +126,14 @@ def word_freq(files, keywords):
     years = range(min_year, max_year+1)
     global_word_freqs = init_dict(keywords, init_dict(years, 0))
     corpus_size = init_dict(years, 0)
+    metadata = init_dict(years, defaultdict(lambda: 0, {}))
+
     for year, freqs, file_size in word_freqs:
         for word, frequency in freqs.items():
             global_word_freqs[word][year] += frequency
         corpus_size[year] += file_size
+        metadata[year]["Files Analyzed"] += 1
+        metadata[year]["Total Word Count"] += file_size
     
     # Convert absolute count to percentage
     for keyword in global_word_freqs:
@@ -139,7 +143,7 @@ def word_freq(files, keywords):
                 val = val / corpus_size[year] * 100
             global_word_freqs[keyword][year] = float("%.6f" % val)
 
-    return global_word_freqs
+    return [global_word_freqs, metadata]
 
 def get_word_freq(file_data, keywords):
     filename, fileyear = file_data
@@ -178,18 +182,23 @@ def get_top_bigrams(files):
 
     global_freqs = init_dict(years, defaultdict(lambda: 0, {}))
     total_bigram_counts = init_dict(years, 0)
+    metadata = init_dict(years, defaultdict(lambda: 0, {}))
+    for year in years:
+        metadata[year]["Files Analyzed"] += 1
+
     for year, freqs, file_size in bigram_freqs:
         total_bigram_counts[year] += file_size ** 2
         for bigram, freq in freqs.items():
             global_freqs[year][bigram] += freq
+        metadata[year]["Total Word Count"] += file_size
     for year in global_freqs.keys():
         # Only return bigrams that make up more than .5% of all bigrams for that year.
         #freq_threshold = 0.005 * total_bigram_counts[year]
         #freq_threshold = 25
         #global_freqs[year] = {";".join(k):v for (k,v) in global_freqs[year].items() if v >= freq_threshold}
         global_freqs[year] = n_highest_entries(global_freqs[year], 50)
-
-    return global_freqs
+    
+    return [global_freqs, metadata]
 
 def get_bigrams(files, year):
     # Still works with singletons.
@@ -206,8 +215,8 @@ def get_bigrams(files, year):
             continue
         
         file_bigrams = defaultdict(lambda: 0)
-        # TODO: Handle .lower() here.
-        file = list(map(lambda x: x.strip(), file.readlines()))
+        # TODO: Make .lower() a parameter.
+        file = list(map(lambda x: x.strip().lower(), file.readlines()))
         for i in range(len(file) - 1):
             if file[i+1] in stopwords:
                 i += 1
@@ -223,7 +232,7 @@ def get_bigrams(files, year):
         for key, value in file_bigrams:
             bigrams[key] += value
 
-        file_length += len(files)
+        file_length += len(file)
 
         inc_task_processed()
         push_metadata_to_db("files_analyzed")

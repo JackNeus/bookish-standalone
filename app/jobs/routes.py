@@ -119,15 +119,16 @@ def view(ids):
 		results[job.name] = controller.get_job_results(id, task not in no_truncate_tasks);
 		single_entry = job.name
 
+	for id in results:
+		results[id] = results[id].strip().split("\n")
+		
 	# TODO: Support multivis for all tasks.
 	if job.task == "word_freq_task":
-		return render_template("jobs/ngram_viewer.html", data = results[single_entry])
+		return render_template("jobs/ngram_viewer.html", data = json.dumps(results))
 	elif job.task == "top_bigrams_task":
 		return render_template("jobs/graph_viewer.html", vis_name="bigram", data = json.dumps(results))
 	elif job.task == "word_family_graph_task":
-		for id in results:
-			results[id] = results[id].strip().split("\n")
 		return render_template("jobs/graph_viewer.html", vis_name="wordfam", data = json.dumps(results))
 	else:
-		return render_template("jobs/default_viewer.html", data = results[single_entry])
+		return render_template("jobs/default_viewer.html", data = json.dumps(results))
 	return redirect(url_for("jobs.jobs_index"))
