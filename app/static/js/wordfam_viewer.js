@@ -70,5 +70,16 @@ var convert_data_by_id = function(id, year) {
       "value": raw_data[1][year][element]
     });
   });
-  return {"nodes": nodes, "links": links};
+
+  let result = {"nodes": nodes, "links": links, "metadata": {}};
+
+  // Has metadata.
+  if (raw_data.length > 3) {
+    result["metadata"] = raw_data[3];
+  }
+  return result;
+}
+
+if (!is_multi_result()) {
+  $("#task-info").text(Object.keys(task_results)[0]);
 }

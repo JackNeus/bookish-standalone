@@ -30,24 +30,44 @@ updateGraph(graph, task_results);
 //render_chart(task_results);
 
 */
+Object.keys(task_results).forEach(function(id) {
+  if (typeof task_results[id] == "string") {
+    task_results[id] = [JSON.parse(task_results[id])];
+  } else {
+    for (var i = 0; i < task_results[id].length; i++) {
+      task_results[id][i] = JSON.parse(task_results[id][i]);
+    }
+  }
+});
+
 var is_multi_result = function() {
+  if (Object.keys(task_results).length > 1) return true;
   return false;
 }
 
 var get_data_years = function() {
-  var years = [];
-  Object.keys(task_results).forEach(function(year) {
-    years.push(parseInt(year));
+  var years = new Set();
+  Object.keys(task_results).forEach(function(id) {
+    Object.keys(task_results[id][0]).forEach(function(year) {
+      years.add(parseInt(year));
+    });
   });
+  years = Array.from(years);
+  years.sort();
   return years;
 }
 
 var convert_data = function(year) {
-  var data = task_results[year];
-  
+  let id = Object.keys(task_results)[0];
+  return convert_data_by_id(id, year);
+}
+
+var convert_data_by_id = function(id, year) {
+  var raw_data = task_results[id];
+
   var node_set = new Set([]);
   var links = [];
-  data.forEach(function(element) {
+  raw_data[0][year].forEach(function(element) {
     node_set.add(element[0][0]);
     node_set.add(element[0][1]);
     links.push({
@@ -64,6 +84,13 @@ var convert_data = function(year) {
       "value": 1
     });
   });
-  return {"nodes": nodes, "links": links};
+  
+  var result = {"nodes": nodes, "links": links, "metadata": {}};
+  if (raw_data.length > 1)
+    result["metadata"] = raw_data[1];
+  return result;
 }
 
+if (!is_multi_result()) {
+  $("#task-info").text(Object.keys(task_results)[0]);
+}
