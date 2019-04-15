@@ -6,11 +6,26 @@ var x_max = 0;
 /* Utilities */
 
 var free_colors = new Set([
-	"#3e95cd", 
-	"#8e5ea2", 
-	"#3cba9f", 
-	"#e8c3b9", 
-	"#c45850"]);
+"#1f77b4",
+"#aec7e8",
+"#ff7f0e",
+"#ffbb78",
+"#2ca02c",
+"#98df8a",
+"#d62728",
+"#ff9896",
+"#9467bd",
+"#c5b0d5",
+"#8c564b",
+"#c49c94",
+"#e377c2",
+"#f7b6d2",
+"#7f7f7f",
+"#c7c7c7",
+"#bcbd22",
+"#dbdb8d",
+"#17becf",
+"#9edae5"]);
 var used_colors = new Set();
 
 // Picks a color from free_colors and
