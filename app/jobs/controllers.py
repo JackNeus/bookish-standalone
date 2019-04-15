@@ -11,6 +11,7 @@ from tasks.worker import BookishJob
 
 from app.models import JobEntry
 from tasks import tasks
+from tasks.util import set_task_status
 
 
 def get_job_entry(id):
@@ -72,16 +73,26 @@ def schedule_job(task, params, name = None):
 
 def kill_job(id):
     job = get_rq_job(id)
-    print("Job: ", job)
+
     if job is None:
         return False
-        
-    try:
-        job.kill()
+    job_entry = get_job_entry(id)
+    job_status = job_entry.get_status()
+
+    if job_status == "Running":
+        try:
+            job.kill()
+            return True
+        except Exception as e:
+            return False
+    elif job_status == "Queued":
+        current_app.task_queue.remove(job)
+        job_entry.status = "Aborted"
+        job_entry.save()
         return True
-    except Exception as e:
-        raise e
+    else:
         return False
+
 
 def delete_job(id):
     job = get_job_entry(id)
