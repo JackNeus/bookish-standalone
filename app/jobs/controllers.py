@@ -155,6 +155,6 @@ def get_seed_jobs():
     if current_app.config["DEBUG"]:
         jobs.append(("dummy", "dummy job (all local files, 1900-1909)"))
         jobs.append(("dummy2", "dummy job (all local files, 1900-1919)"))
-    else:
-        jobs.append(('','null'))
+    elif len(jobs) == 0:
+        jobs.append(('','n/a'))
     return jobs
