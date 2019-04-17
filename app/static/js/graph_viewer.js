@@ -9,6 +9,8 @@ function getLinkId(link) {
   return link.source.id + "-" + link.target.id;
 }
 
+var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+
 function createGraph(graph, graph_id) {
   // Defensive copy.
   graph = $.extend(true, {}, graph);
@@ -34,23 +36,6 @@ function createGraph(graph, graph_id) {
       return key + ": " + metadata[key];
     }).join("<br />");
     $(viewport).find(".metadata").html(text);
-  }
-
-  var colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-  colorScale.domain([0,1,2,3,4,5,6,7,8,9]);
-
-  var groupIndex = {};
-  var sortedNodes = graph.nodes.slice();
-  sortedNodes.sort(function(a, b) {
-      if (a.group === b.group) return 0;
-      else if (a.group < b.group) return -1;
-      return 1;
-  });
-
-  for (var i = 0; i < sortedNodes.length; i++) {
-    let node = sortedNodes[i];
-    if (groupIndex[node.group] === undefined) 
-      groupIndex[node.group] = Object.keys(groupIndex).length;
   }
 
   var simulation = d3.forceSimulation()
@@ -94,8 +79,6 @@ function createGraph(graph, graph_id) {
 
   this.addNode = function(node) {
     graph.nodes.push(node);
-    if (groupIndex[node.group] === undefined) 
-      groupIndex[node.group] = Object.keys(groupIndex).length;
     renderGraph();
   }
 
@@ -153,7 +136,7 @@ function createGraph(graph, graph_id) {
 
     node_enter.append("circle")
       .attr("class", "node-circle")
-      .attr("fill", function(d, i) { return colorScale(groupIndex[d.group]); });
+      .attr("fill", function(d, i) { return colorScale(parseInt(d.group)); });
 
     node_enter.append("text")
       .attr("dy", ".35em")
