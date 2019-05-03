@@ -2,6 +2,7 @@ setInterval(function() {
 	$.getJSON("/jobs.json").done(function(data) { updateData(data); });
 }, 1500);
 
+var firstUpdate = true;
 function updateData(data) {
 	for (let i = 0; i < data.length; i++) {
 		let job = data[i];
@@ -9,7 +10,7 @@ function updateData(data) {
 
 	        var previous_status = job_table_row.find("td.status").html();
 		job_table_row.find("td.status").html(job.status);
-	        if (previous_status === "Queued" || previous_status === "Running")
+	        if (previous_status === "Queued" || previous_status === "Running" || firstUpdate)
 		    job_table_row.find("td.task-progress").html(job.progress);
 		var description = job.description;
 
@@ -20,7 +21,7 @@ function updateData(data) {
 		}
 		// Only update text of running tasks.
 		// This allows the text in other tasks to be selected.
-	        if (previous_status === "Queued" || previous_status === "Running") {
+	        if (previous_status === "Queued" || previous_status === "Running" || firstUpdate) {
 			job_table_row.find("td.description")
 			.html(description)
 			.attr("title", job.description);
@@ -44,6 +45,7 @@ function updateData(data) {
 	}
 	updateLinks();
 	updateRows();
+        firstUpdate = false;
 }
 
 function updateRows() {
