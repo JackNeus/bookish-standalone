@@ -29,7 +29,7 @@ def load_user(user_id):
 		if user_entry is None:
 			# Throw an error
 			raise UserDoesNotExistError()
-		user = User(str(user_entry.id), user_entry.username, user_entry.is_admin)
+		user = User(str(user_entry.id), user_entry.username, user_entry.is_admin, user_entry.sandboxed)
 		return user
 	except Exception as e:
 		raise e
