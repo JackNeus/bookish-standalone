@@ -34,6 +34,10 @@ def logout():
 
 @bp.route('/profile', methods=['GET', 'POST'])
 def profile():
+	# If user is sandboxed, disable their profile.
+	if current_user.is_sandboxed:
+		return make_response(redirect("/"))
+
 	change_pwd_form = ChangePasswordForm()
 	add_user_form = AddUserForm()
 

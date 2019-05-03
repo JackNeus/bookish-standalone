@@ -24,6 +24,10 @@ def schedule():
 	seed_jobs = controller.get_seed_jobs()
 	form = ScheduleForm()
 	if form.validate_on_submit():
+		# If user is sandboxed, don't actually let them schedule a job.
+		if current_user.is_sandboxed:
+			return render_template("jobs/schedule.html", form=form)
+
 		task = tasks.resolve_task(form.task_name.data)
 		job_name = form.job_name.data
 
@@ -53,6 +57,9 @@ def schedule():
 @bp.route('jobs/kill/<id>')
 @login_required
 def kill(id):
+	if current_user.is_sandboxed:
+		return redirect(url_for("jobs.jobs_index"))
+
 	job = controller.get_job_entry(id)
 	if job is None:
 		flash("Job does not exist.")
@@ -63,6 +70,9 @@ def kill(id):
 @bp.route('jobs/delete/<ids>')
 @login_required
 def delete(ids):
+	if current_user.is_sandboxed:
+		return redirect(url_for("jobs.jobs_index"))
+
 	ids = ids.split(";");
 	for id in ids:
 		# TODO: Prevent users from cancelling each other's jobs
@@ -76,6 +86,9 @@ def delete(ids):
 @bp.route('jobs/replay/<id>')
 @login_required
 def replay(id):
+	if current_user.is_sandboxed:
+		return redirect(url_for("jobs.jobs_index"))
+
 	job = controller.get_job_entry(id)
 	if job is None:
 		flash("Job does not exist.")
