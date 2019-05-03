@@ -7,8 +7,10 @@ function updateData(data) {
 		let job = data[i];
 		let job_table_row = $("tr#"+job.id);
 
+	        var previous_status = job_table_row.find("td.status").html();
 		job_table_row.find("td.status").html(job.status);
-		job_table_row.find("td.task-progress").html(job.progress);
+	        if (previous_status === "Queued" || previous_status === "Running")
+		    job_table_row.find("td.task-progress").html(job.progress);
 		var description = job.description;
 
 		// Truncate description if too long.
@@ -18,7 +20,7 @@ function updateData(data) {
 		}
 		// Only update text of running tasks.
 		// This allows the text in other tasks to be selected.
-		if (job.status === "Running") {
+	        if (previous_status === "Queued" || previous_status === "Running") {
 			job_table_row.find("td.description")
 			.html(description)
 			.attr("title", job.description);
