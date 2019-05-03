@@ -374,7 +374,7 @@ function unselect_nodes() {
 $(".year-btn").on("click", function(e) {
   let year = parseInt($(this).attr("value"));
 
-  let multiselect = e.ctrlKey;
+  let multiselect = e.ctrlKey || e.metaKey;
   var button_selected = $(this).hasClass("btn-selected");
   var num_selected = $(".btn-selected").length;
 

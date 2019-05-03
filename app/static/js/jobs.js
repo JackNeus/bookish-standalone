@@ -16,9 +16,13 @@ function updateData(data) {
 		if (job.description.length > max_description_length) {
 			description = job.description.substr(0, max_description_length) + "...";
 		}
-		job_table_row.find("td.description")
+		// Only update text of running tasks.
+		// This allows the text in other tasks to be selected.
+		if (job.status === "Running") {
+			job_table_row.find("td.description")
 			.html(description)
 			.attr("title", job.description);
+		}
 		job_table_row.find("td.time-started").html(job.time_started);
 		job_table_row.find("td.time-finished").html(job.time_finished);
 		
