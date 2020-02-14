@@ -148,18 +148,11 @@ $.getJSON("results/ngram_result.json", function(data) {
 
 function start() {
 	init_chart();
-	var task_name = Object.keys(task_results)[0];
+	var task_name = Object.keys(task_results).join(", ");
 
-	if (typeof task_results[task_name] === "string") {
-		task_results[task_name] = [JSON.parse(task_results[task_name])];
-	} else {
-		for (var i = 0; i < task_results[task_name].length; i++) {
-			task_results[task_name][i] = JSON.parse(task_results[task_name][i]);
-		}
-	}
-	var task_data = task_results[task_name];
-	for (var index in task_data[0]) {
-		add_dataset(index, task_data[0][index])
+	var task_data = task_results;
+	for (var index in task_results) {
+		add_dataset(index, task_data[index])
 	}
 
 	// Raw Data Show/Hide
@@ -174,14 +167,17 @@ function start() {
 	});
 
 	$("#task-info").text(task_name);
-	if (task_data.length > 1) {
-		let text = "";
-		for (year in task_data[1]) {
-			let metadata = task_data[1][year];
-		    text += year + ": " + Object.keys(metadata).map(function(key) {
-		      return key + ": " + metadata[key];
-		    }).join(", ") + "<br />";
+	var data_string = "{";
+	var items_processed = 0;
+	for (var index in task_results) {
+		data_string = data_string + "\"" + index + "\": " +
+			JSON.stringify(task_results[index]);
+		items_processed += 1;
+		if (items_processed < Object.keys(task_results).length) {
+			data_string = data_string + ",";
 		}
-		$(".ngram-metadata").html(text);
+		data_string = data_string + "<br />";
 	}
+	data_string += "}"
+	$("#raw-data").html(data_string);
 }

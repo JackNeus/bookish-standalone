@@ -11,6 +11,7 @@
 
 	  <script type="text/javascript" src="js/ngram_viewer.js"></script>
 
+		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
 		<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
 		<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
 		<link rel="stylesheet" href="css/style.css?v=2">
@@ -24,10 +25,8 @@
 					<div class="chart-container">
 						<canvas id="chart"></canvas>
 					</div>
-					<div class="ngram-metadata"></div>
-
 			    <a id="show-data" class="btn btn-primary">Show Raw Data</a>
-					<div id="raw-data" class="hidden monospace">{{data}}</div>
+					<div id="raw-data" class="hidden monospace text-wrap"></div>
 				</div>
 			</div>
 		</div>
