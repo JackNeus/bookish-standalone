@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block app_content %}
+	<div id="app-content" class="row justify-content-center height-90">	
+		<div id="task-info"></div>
+		<div class="chart-container">
+			<canvas id="chart"></canvas>
+		</div>
+		<div class="ngram-metadata"></div>
+
+    <a id="show-data" class="btn btn-primary">Show Raw Data</a>
+		<div id="raw-data" class="hidden monospace">{{data}}</div>
+	</div>
+{% endblock %}
+
+{% block scripts %}
+	{{super()}}	
+	<script type="text/javascript">
+		var task_results = JSON.parse({{data | tojson }});
+	</script>
+  <script type="text/javascript" src="/static/js/ngram_viewer.js?v=3"></script>		
+{% endblock %}

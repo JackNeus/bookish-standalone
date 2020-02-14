@@ -12,3 +12,5 @@ dummy
 *.css
 *d3v4.js*
 .sass-cache/*
+basic/results/*
+basic/env*

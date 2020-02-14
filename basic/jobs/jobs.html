@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block scripts %}
+	{{ super() }}
+  <script type="text/javascript" src="/static/js/jobs.js?v=2"></script>		
+	<script type="text/javascript">
+		updateData({{ jobs | safe}});
+	</script>
+{% endblock %}
+
+{% block app_content %}
+	<table class="table">
+		<thead>
+			<th scope="col"></th>
+			<th scope="col">Task</th>
+			<th scope="col">Job Name</th>
+			<th scope="col">Status</th>
+			<th scope="col"></th>
+			<th scope="col">Started</th>
+			<th scope="col">Finished</th>
+			<th scope="col">Progress</th>
+			<th scope="col">Description</th>
+			<th scope="col"></th>
+		</thead>
+		<tbody id="jobs">
+			{% for i in range(jobs|length) %}
+				<tr id="{{ jobs[i].id }}">
+					<th scope="row"><input class="select" type="checkbox"/></th>
+					<td class="id" title="{{ jobs[i].id }}">{{ jobs[i].task }}</td>
+					<td class="name">{{ jobs[i].name }}</td>
+					<td class="status">{{ jobs[i].status }}</td>
+					<td class="view-results">
+						{% if jobs[i].status == "Completed" %}
+							<a href="jobs/view/{{jobs[i].id}}">View Results</a>
+						{% endif %}
+					</td>
+					<td class="time-started">{{ jobs[i].time_started }}</td>
+					<td class="time-finished">{{ jobs[i].time_finished }}</td>
+					<td class="task-progress">{{ jobs[i].progress }}</td>
+					<td class="description" title="{{jobs[i].description}}">
+						{{ jobs[i].description[:[150, jobs[i].description|length]|min] }}
+					</td>
+					<td class="action">
+						{% if jobs[i].status in ["Queued", "Running"] %}
+							<a href="jobs/kill/{{jobs[i].id}}">Abort Job</a>
+						{% elif jobs[i].status not in ["Aborting"] %}
+							<a href="jobs/delete/{{jobs[i].id}}">Delete Job</a>
+						{% endif %}
+					</td>
+					<td class="replay">
+						{% if jobs[i].status not in ["Queued", "Running"] %}
+							<a href="jobs/replay/{{jobs[i].id}}">Replay</a></td>
+						{% endif %}
+				</tr>
+			{% endfor %}
+		</tbody>
+	</table>
+{% endblock %}

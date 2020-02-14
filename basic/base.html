@@ -1,0 +1,47 @@
+{% extends 'bootstrap/base.html' %}
+
+{% macro render_field(field, disabled = false) %}
+	{{ field(disabled = disabled) }}
+{% endmacro %}
+
+{% block title %}
+	{% if title %} {{title}} - Bookish {% else %} Bookish {% endif %}
+{% endblock %}
+
+{% block navbar %}
+{{nav.navbar.render()}}
+{% endblock %}
+
+{% block content %}
+	<div class="container-fluid height-90">
+		{% with messages = get_flashed_messages() %}
+			{% if messages %}
+				<div class="flashes">
+				{% for message in messages %}
+					<p>{{ message }}</p>
+				{% endfor %}
+				</div>
+			{% endif %}
+		{% endwith %}
+		{% block app_content %}{% endblock %}
+	</div>
+{% endblock %}
+
+{% block head %}
+{{super()}}
+{% endblock %}
+
+{% block scripts %}
+	{{super()}}	
+	<!--<script src="http://code.jquery.com/jquery-2.2.4.min.js"></script>-->
+	<script src="//code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>	
+	<script src="http://d3js.org/d3.v4.min.js"></script>
+{% endblock %}
+
+{% block styles -%}
+{{super()}}
+<link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<link rel="stylesheet" href="/static/css/style.css?v=2">
+{% endblock styles %}
