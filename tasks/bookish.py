@@ -8,7 +8,7 @@ import os
 import sys
 import time
 
-from multi_util import *
+from utils import *
 from stopwords import stopwords
 
 

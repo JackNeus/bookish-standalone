@@ -1,4 +1,5 @@
 from collections import defaultdict
+import copy
 from itertools import starmap
 import json
 
