@@ -1,5 +1,4 @@
 docs/*
-txt/*
 env/*
 rq_results/*
 __pycache__/*

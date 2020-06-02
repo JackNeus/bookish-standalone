@@ -350,7 +350,6 @@ def get_word_family_data(file_data, keywords):
 
 def main():
     args = parser.parse_args(sys.argv[1:])
-    print(args)
     file_list = []
     for line in args.file_list.readlines():
         line = line.strip().split()
@@ -388,7 +387,6 @@ def main():
     js_vars = "\n\t\t".join(
         [localStorageTemplate % (k, data) for (k, data) in enc_res])
     vis_html = template % (js_vars, args.task)
-    print(vis_html)
 
     output_file = open(output_filename, "w")
     output_file.write(dump_task_results(res) if args.raw_output else vis_html)
