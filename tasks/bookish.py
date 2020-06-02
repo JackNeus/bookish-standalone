@@ -9,6 +9,7 @@ import sys
 import time
 
 from utils import *
+from html import *
 from stopwords import stopwords
 
 
@@ -52,6 +53,11 @@ parser.add_argument('-f',
                     dest='force_dest',
                     help='Force overwrite dest if file exists',
                     action='store_true')
+parser.add_argument(
+    '--raw',
+    dest='raw_output',
+    help='Output raw analysis results instead of visualization html file',
+    action='store_true')
 
 subparsers = parser.add_subparsers(
     title='Analysis Tasks',
@@ -72,7 +78,7 @@ bigram_parser = subparsers.add_parser('bigram', help='Top Bigrams Analysis')
 word_family_parser = subparsers.add_parser('word_family',
                                            help='Word Family Graph Analysis')
 word_family_parser.add_argument(
-    metavar="word_family",
+    metavar="family",
     dest="word_families",
     nargs="+",
     help='Word families to analyze -- words in a family are comma separated')
@@ -196,7 +202,6 @@ def get_bigrams(files, year):
             continue
 
         file_bigrams = defaultdict(lambda: 0)
-        # TODO: Make .lower() a parameter.
         file = list(map(lambda x: x.strip().lower(), file.readlines()))
         for i in range(len(file) - 1):
             if file[i + 1] in stopwords:
@@ -353,7 +358,8 @@ def main():
                                        line[0]), int(line[1])))
 
     epoch = int(time.time())
-    output_filename = "%s%s.analysis" % (args.task, epoch)
+    output_filename = "%s%s.%s" % (args.task, epoch,
+                                   "analysis" if args.raw_output else "html")
     if args.dest:
         if os.path.exists(args.dest) and not args.force_dest:
             sys.exit(
@@ -361,17 +367,29 @@ def main():
                 % args.dest)
         output_filename = args.dest
 
+    keys = None
     res = None
     if args.task == "word_freq":
-        res = word_freq(file_list, args.keywords)
-    if args.task == "bigram":
+        keys = ["word_freqs", "metadata"]
+        res = word_freq(file_list, [x.lower() for x in args.keywords])
+    elif args.task == "bigram":
+        keys = ["word_freqs", "metadata"]
         res = get_top_bigrams(file_list)
-    if args.task == "word_family":
-        word_families = [x.split(",") for x in args.word_families]
+    elif args.task == "word_family":
+        keys = ["fcsm", "word_freqs", "word_families", "metadata"]
+        word_families = [x.split(",").lower() for x in args.word_families]
         res = get_word_family_graph(file_list, word_families)
+    else:
+        sys.exit("Unknown task.")
+
+    enc_res = zip(keys, [json.dumps(x) for x in res])
+    js_vars = "\n\t\t".join(
+        [localStorageTemplate % (k, data) for (k, data) in enc_res])
+    vis_html = template % (js_vars, args.task)
+    print(vis_html)
 
     output_file = open(output_filename, "w")
-    output_file.write(dump_task_results(res))
+    output_file.write(dump_task_results(res) if args.raw_output else vis_html)
     output_file.close()
     print("Results written to %s." % output_filename)
 
