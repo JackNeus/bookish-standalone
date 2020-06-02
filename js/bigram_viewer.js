@@ -1,8 +1,11 @@
 //http://bl.ocks.org/heybignick/3faf257bbbbc7743bb72310d03b86ee8
 //http://bl.ocks.org/mbostock/1129492
 //https://observablehq.com/@d3/disjoint-force-directed-graph
+
 var fileName = localStorage.getItem('fileName');
 var task_results = {};
+// The graph viewer supports multi-visualizations (e.g. view multiple analysis results at once).
+// To use this feature, simply add entries to the task_results dict.
 task_results[fileName] = [JSON.parse(localStorage.getItem('word_freqs'))];
 
 $("#raw-data").text(JSON.stringify(task_results[fileName]));

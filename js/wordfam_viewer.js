@@ -1,5 +1,7 @@
 var fileName = localStorage.getItem('fileName');
 var task_results = {};
+// The graph viewer supports multi-visualizations (e.g. view multiple analysis results at once).
+// To use this feature, simply add entries to the task_results dict.
 task_results[fileName] = [
   JSON.parse(localStorage.getItem('fcms')),
   JSON.parse(localStorage.getItem('word_freqs')),
