@@ -65,7 +65,6 @@ var init_chart = function() {
 	chart_data.datasets = [];
 
 	var ctx = $("#chart");
-	console.log(ctx);
 	ngram_chart = new Chart(ctx, {
 	    type: 'line',
 	    data: chart_data,
@@ -139,10 +138,10 @@ function adjust_canvas() {
 	canvas.width = canvas.offsetWidth;
 	canvas.height = canvas.offsetHeight;
 }
-//adjust_canvas();
 
-var task_results = {};
-task_results = JSON.parse(localStorage.getItem('word_freqs'));
+var fileName = localStorage.getItem('fileName');
+$("#task-info").text(fileName);
+var task_results = JSON.parse(localStorage.getItem('word_freqs'));
 start();
 
 function start() {
@@ -165,7 +164,6 @@ function start() {
 	  }
 	});
 
-	$("#task-info").text(task_name);
 	var data_string = "{";
 	var items_processed = 0;
 	for (var index in task_results) {

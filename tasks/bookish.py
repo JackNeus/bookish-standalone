@@ -376,13 +376,15 @@ def main():
         keys = ["word_freqs", "metadata"]
         res = get_top_bigrams(file_list)
     elif args.task == "word_family":
-        keys = ["fcsm", "word_freqs", "word_families", "metadata"]
-        word_families = [x.split(",").lower() for x in args.word_families]
+        keys = ["fcms", "word_freqs", "word_families", "metadata"]
+        word_families = [[y.lower() for y in x.split(",")]
+                         for x in args.word_families]
         res = get_word_family_graph(file_list, word_families)
     else:
         sys.exit("Unknown task.")
 
-    enc_res = zip(keys, [json.dumps(x) for x in res])
+    enc_res = zip(keys + ["fileName"],
+                  [json.dumps(x) for x in res] + [output_filename])
     js_vars = "\n\t\t".join(
         [localStorageTemplate % (k, data) for (k, data) in enc_res])
     vis_html = template % (js_vars, args.task)

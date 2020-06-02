@@ -1,0 +1,51 @@
+<html>
+  <head>
+    <title>Bookish Standalone - Word Family Analysis</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+    <script src="https://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>  
+    <script src="http://d3js.org/d3.v4.min.js"></script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="css/style.css?v=2">
+  </head>
+
+  <body>
+    <div class="container-fluid height-90">
+      <div class="row">
+        <div id="app-content" class="row justify-content-center height-90"> 
+          <div id="task-info"></div>
+          <div class="vis-row row">
+            <div id="year-options" class="btn-group btn-group-vertical col-xs-2"></div>
+            <div id="viewport-container" class="col-xs-10 row">
+              <div value="0" class="col-sm-4 d3-viewport hidden">
+                <div class="year-label"></div>
+                <div class="metadata"></div>
+                <svg></svg>
+              </div>
+              <div value="1" class="col-sm-4 d3-viewport hidden">
+                <div class="year-label"></div>
+                <div class="metadata"></div>
+                <svg></svg>
+              </div>
+              <div value="2" class="col-sm-4 d3-viewport hidden">
+                <div class="year-label"></div>
+                <div class="metadata"></div>
+                <svg></svg>
+              </div>
+            </div>
+          </div>
+          <a id="show-data" class="btn btn-primary">Show Raw Data</a>
+          <div id="raw-data" class="hidden monospace text-wrap"></div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script type="text/javascript" src="js/wordfam_viewer.js"></script>
+  <script type="text/javascript" src="js/graph_viewer.js"></script>
+</html>
