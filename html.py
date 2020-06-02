@@ -5,7 +5,7 @@ template = '''
 	<script type="text/javascript">
 		// Set variables in local storage.
 		%s
-		window.location = "%s.html";
+		window.location = "vis_%s.html";
 	</script>
 </html>
 '''
